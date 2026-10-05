@@ -1,42 +1,35 @@
 <!DOCTYPE html><html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ثبت شکایت در سامانه">
-  <title>ثبت شکایت | سامانه شکایات</title>  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>ثبت شکایت | سامانه شکایات</title>  <link rel="stylesheet" href="css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">  <style>
     .complaint-page {
       min-height: 100vh;
-      padding: 28px 18px 60px;
+      padding: 28px 16px 60px;
     }
 
     .complaint-container {
-      width: min(100%, 980px);
-      margin: 0 auto;
+      width: min(100%, 1000px);
+      margin: auto;
     }
 
-    .complaint-topbar {
+    .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 15px;
-      margin-bottom: 25px;
+      margin-bottom: 22px;
+      gap: 12px;
     }
 
     .back-link {
       color: var(--text);
       text-decoration: none;
-      font-weight: 600;
-      opacity: .9;
+      font-weight: 700;
     }
 
-    .back-link:hover {
-      opacity: 1;
-    }
-
-    .complaint-card {
+    .card {
       background: rgba(255,255,255,.06);
       border: 1px solid rgba(255,255,255,.12);
       border-radius: 24px;
@@ -45,61 +38,61 @@
       box-shadow: 0 20px 60px rgba(0,0,0,.25);
     }
 
-    .page-title {
+    h1 {
       margin: 0 0 8px;
-      font-size: clamp(25px, 5vw, 36px);
+      font-size: clamp(26px, 5vw, 38px);
     }
 
-    .page-description {
-      margin: 0 0 30px;
+    .intro {
       color: var(--muted);
       line-height: 1.9;
+      margin-bottom: 30px;
     }
 
-    .step-bar {
+    .steps {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
       margin-bottom: 30px;
     }
 
     .step {
-      padding: 12px;
       text-align: center;
+      padding: 11px 5px;
       border-radius: 12px;
       background: rgba(255,255,255,.05);
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .step.active {
-      background: rgba(99,102,241,.18);
       color: var(--text);
+      background: rgba(99,102,241,.18);
       border: 1px solid rgba(99,102,241,.35);
     }
 
-    .form-section {
+    .section {
       margin-bottom: 30px;
     }
 
-    .form-section h2 {
-      margin: 0 0 18px;
+    .section h2 {
       font-size: 19px;
+      margin: 0 0 17px;
     }
 
     .field {
-      margin-bottom: 18px;
+      margin-bottom: 17px;
     }
 
-    .field label {
+    label {
       display: block;
       margin-bottom: 8px;
       font-weight: 600;
     }
 
-    .field input,
-    .field select,
-    .field textarea {
+    input,
+    select,
+    textarea {
       width: 100%;
       box-sizing: border-box;
       border: 1px solid rgba(255,255,255,.14);
@@ -112,17 +105,23 @@
       outline: none;
     }
 
-    .field textarea {
-      min-height: 170px;
+    textarea {
+      min-height: 180px;
       resize: vertical;
       line-height: 1.9;
     }
 
-    .field input:focus,
-    .field select:focus,
-    .field textarea:focus {
-      border-color: rgba(99,102,241,.7);
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(99,102,241,.75);
       box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
     }
 
     .radio-grid {
@@ -131,33 +130,27 @@
       gap: 12px;
     }
 
-    .radio-option {
-      position: relative;
-    }
-
     .radio-option input {
-      position: absolute;
-      opacity: 0;
+      display: none;
     }
 
     .radio-option label {
-      display: block;
       cursor: pointer;
-      padding: 16px;
-      border-radius: 14px;
+      padding: 17px;
+      border-radius: 15px;
       border: 1px solid rgba(255,255,255,.12);
       background: rgba(255,255,255,.04);
       transition: .2s;
     }
 
     .radio-option input:checked + label {
-      border-color: rgba(99,102,241,.7);
-      background: rgba(99,102,241,.14);
+      border-color: rgba(99,102,241,.75);
+      background: rgba(99,102,241,.15);
     }
 
     .another-person {
       display: none;
-      margin-top: 20px;
+      margin-top: 18px;
       padding: 20px;
       border-radius: 16px;
       background: rgba(255,255,255,.035);
@@ -168,32 +161,76 @@
       display: block;
     }
 
-    .two-columns {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
+    .notice {
+      padding: 15px;
+      border-radius: 14px;
+      background: rgba(245,158,11,.1);
+      border: 1px solid rgba(245,158,11,.2);
+      line-height: 1.9;
+      margin-bottom: 18px;
     }
 
-    .upload-box {
-      border: 1px dashed rgba(255,255,255,.22);
+    .upload {
+      padding: 22px;
+      border: 1px dashed rgba(255,255,255,.25);
       border-radius: 16px;
-      padding: 25px;
       text-align: center;
-      color: var(--muted);
     }
 
-    .upload-box input {
+    .upload input {
       margin-top: 12px;
     }
 
-    .notice {
-      padding: 15px 17px;
-      border-radius: 14px;
-      background: rgba(245,158,11,.1);
-      border: 1px solid rgba(245,158,11,.22);
-      color: var(--text);
-      line-height: 1.9;
-      margin-bottom: 25px;
+    .signature-box {
+      background: rgba(0,0,0,.16);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    #signatureCanvas {
+      display: block;
+      width: 100%;
+      height: 220px;
+      background: #fff;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .signature-actions {
+      display: flex;
+      justify-content: flex-start;
+      padding: 10px;
+      background: rgba(0,0,0,.12);
+    }
+
+    .clear-signature {
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 15px;
+      background: rgba(239,68,68,.15);
+      color: #fca5a5;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .signature-status {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .confirm-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      line-height: 1.8;
+      cursor: pointer;
+    }
+
+    .confirm-row input {
+      width: auto;
+      margin-top: 7px;
     }
 
     .actions {
@@ -203,14 +240,13 @@
       margin-top: 30px;
     }
 
-    .actions button,
-    .actions a {
+    .btn {
       min-height: 48px;
       padding: 0 22px;
-      border-radius: 13px;
       border: 0;
+      border-radius: 13px;
       font-family: inherit;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
       text-decoration: none;
       display: inline-flex;
@@ -224,72 +260,163 @@
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
       color: white;
+      background: linear-gradient(135deg,#6366f1,#8b5cf6);
     }
 
     .required {
       color: #f87171;
     }
 
-    @media (max-width: 700px) {
-      .complaint-card {
+    /* Preview */
+    .preview {
+      display: none;
+    }
+
+    .preview.show {
+      display: block;
+    }
+
+    .preview-box {
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 17px;
+      padding: 20px;
+      background: rgba(255,255,255,.035);
+    }
+
+    .preview-row {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      gap: 15px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .preview-row:last-child {
+      border-bottom: 0;
+    }
+
+    .preview-label {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .preview-value {
+      word-break: break-word;
+      line-height: 1.8;
+    }
+
+    .preview-signature {
+      max-width: 100%;
+      height: 130px;
+      background: white;
+      border-radius: 10px;
+      object-fit: contain;
+    }
+
+    .tracking-result {
+      display: none;
+      text-align: center;
+      padding: 30px 15px;
+    }
+
+    .tracking-result.show {
+      display: block;
+    }
+
+    .success-icon {
+      font-size: 50px;
+      margin-bottom: 10px;
+    }
+
+    .tracking-code {
+      direction: ltr;
+      display: inline-block;
+      margin: 15px 0;
+      padding: 16px 22px;
+      border-radius: 14px;
+      background: rgba(99,102,241,.14);
+      border: 1px solid rgba(99,102,241,.35);
+      font-size: clamp(23px, 7vw, 34px);
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+
+    .tracking-note {
+      color: var(--muted);
+      line-height: 1.9;
+    }
+
+    @media(max-width:700px) {
+      .card {
         padding: 20px;
       }
 
-      .radio-grid,
-      .two-columns {
+      .grid-2,
+      .radio-grid {
         grid-template-columns: 1fr;
+      }
+
+      .steps {
+        grid-template-columns: repeat(2,1fr);
+      }
+
+      .preview-row {
+        grid-template-columns: 1fr;
+        gap: 5px;
       }
 
       .actions {
         flex-direction: column;
       }
 
-      .actions button,
-      .actions a {
+      .btn {
         width: 100%;
       }
     }
   </style></head><body><div class="complaint-page">
-  <div class="complaint-container"><div class="complaint-topbar">
-  <a class="back-link" href="user.html">← بازگشت به پنل</a>
+  <div class="complaint-container"><div class="topbar">
+  <a href="user.html" class="back-link">← بازگشت به پنل</a>
   <button id="themeToggle" class="theme-toggle" type="button">☀️</button>
 </div>
 
-<div class="complaint-card">
+<div class="card">
 
-  <h1 class="page-title">ثبت شکایت جدید</h1>
-  <p class="page-description">
-    اطلاعات شکایت را با دقت وارد کنید. پس از بررسی اطلاعات، درخواست شما برای ثبت نهایی ارسال خواهد شد.
+  <h1>ثبت شکایت جدید</h1>
+
+  <p class="intro">
+    اطلاعات شکایت را با دقت وارد کنید. در پایان، اطلاعات را بررسی و سپس ثبت نهایی کنید.
   </p>
 
-  <div class="step-bar">
-    <div class="step active">۱. اطلاعات شکایت</div>
-    <div class="step">۲. پیوست‌ها</div>
-    <div class="step">۳. تأیید نهایی</div>
+  <div class="steps">
+    <div class="step active">۱. اطلاعات</div>
+    <div class="step active">۲. امضا</div>
+    <div class="step">۳. پیش‌نمایش</div>
+    <div class="step">۴. ثبت نهایی</div>
   </div>
 
+  <!-- FORM -->
   <form id="complaintForm">
 
-    <section class="form-section">
+    <section class="section">
+
       <h2>ثبت شکایت برای چه کسی است؟</h2>
 
       <div class="radio-grid">
 
         <div class="radio-option">
-          <input type="radio" id="forMe" name="complaintFor" value="self" checked>
+          <input id="forMe" type="radio" name="complaintFor" value="self" checked>
           <label for="forMe">
             <strong>برای خودم</strong><br>
-            <small>این شکایت مربوط به خود من است.</small>
+            <small>شکایت مربوط به خود من است.</small>
           </label>
         </div>
 
         <div class="radio-option">
-          <input type="radio" id="forAnother" name="complaintFor" value="another">
+          <input id="forAnother" type="radio" name="complaintFor" value="another">
           <label for="forAnother">
             <strong>برای شخص دیگر</strong><br>
-            <small>ثبت درخواست از طرف شخص دیگری.</small>
+            <small>ثبت شکایت توسط فرد مجاز.</small>
           </label>
         </div>
 
@@ -298,17 +425,16 @@
       <div id="anotherPerson" class="another-person">
 
         <div class="notice">
-          این گزینه برای ثبت شکایت توسط فرد مجاز، از جمله ادمین سامانه، در نظر گرفته شده است.
-          اطلاعات شخص اصلی شکایت باید به‌صورت دقیق وارد شود.
+          این بخش برای ثبت شکایت از طرف شخص دیگر، از جمله توسط ادمین سامانه، است.
         </div>
 
-        <div class="two-columns">
+        <div class="grid-2">
 
           <div class="field">
             <label for="complainantName">
               نام و نام خانوادگی شاکی <span class="required">*</span>
             </label>
-            <input id="complainantName" type="text" placeholder="مثلاً علی رضایی">
+            <input id="complainantName" type="text">
           </div>
 
           <div class="field">
@@ -322,31 +448,32 @@
 
         <div class="field">
           <label for="complainantNationalId">کد ملی شاکی</label>
-          <input id="complainantNationalId" type="text" inputmode="numeric" placeholder="در صورت نیاز">
+          <input id="complainantNationalId" type="text" inputmode="numeric">
         </div>
 
       </div>
+
     </section>
 
-    <section class="form-section">
+    <section class="section">
 
       <h2>موضوع شکایت</h2>
 
-      <div class="two-columns">
+      <div class="grid-2">
 
         <div class="field">
           <label for="category">
-            دسته‌بندی <span class="required">*</span>
+            نوع شکایت <span class="required">*</span>
           </label>
 
           <select id="category" required>
             <option value="">انتخاب کنید</option>
-            <option value="service">خدمات</option>
-            <option value="financial">مالی</option>
-            <option value="administrative">اداری</option>
-            <option value="technical">فنی</option>
-            <option value="behavior">رفتار و نحوه برخورد</option>
-            <option value="other">سایر</option>
+            <option value="1">خدمات</option>
+            <option value="2">مالی</option>
+            <option value="3">اداری</option>
+            <option value="4">فنی</option>
+            <option value="5">رفتار و نحوه برخورد</option>
+            <option value="6">سایر</option>
           </select>
         </div>
 
@@ -358,37 +485,44 @@
           <input
             id="subject"
             type="text"
-            required
             maxlength="150"
-            placeholder="عنوان کوتاه و واضح شکایت"
+            required
+            placeholder="عنوان کوتاه و واضح"
           >
         </div>
 
       </div>
 
       <div class="field">
+
         <label for="description">
           شرح کامل شکایت <span class="required">*</span>
         </label>
 
         <textarea
           id="description"
-          required
           minlength="20"
-          placeholder="شرح دقیق اتفاق، زمان، مکان و موارد مرتبط را بنویسید..."
+          required
+          placeholder="شرح دقیق موضوع، اتفاق، زمان، مکان و موارد مرتبط..."
         ></textarea>
+
       </div>
 
     </section>
 
-    <section class="form-section">
+    <section class="section">
 
       <h2>مدارک و پیوست‌ها</h2>
 
-      <div class="upload-box">
-        <div>📎</div>
-        <strong>افزودن فایل</strong>
-        <p>تصویر، PDF یا سایر مدارک مرتبط</p>
+      <div class="upload">
+
+        <div style="font-size:30px;">📎</div>
+
+        <strong>افزودن مدارک</strong>
+
+        <p style="color:var(--muted);">
+          تصویر، PDF یا فایل‌های مرتبط با شکایت
+        </p>
 
         <input
           id="attachments"
@@ -396,77 +530,740 @@
           multiple
           accept=".jpg,.jpeg,.png,.pdf,.webp"
         >
+
       </div>
 
     </section>
 
-    <section class="form-section">
+    <!-- SIGNATURE -->
+    <section class="section">
+
+      <h2>امضای شاکی</h2>
 
       <div class="notice">
-        <strong>توجه:</strong>
-        در نسخه فعلی، اطلاعات هنوز در پایگاه داده ذخیره نمی‌شود.
-        پس از اتصال Backend، پس از ثبت موفق یک کد پیگیری یکتا برای پرونده ایجاد خواهد شد.
+        لطفاً امضای خود را در کادر زیر رسم کنید.
       </div>
 
-      <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;line-height:1.8;">
-        <input id="confirmInfo" type="checkbox" required style="margin-top:7px;">
+      <div class="signature-box">
+
+        <canvas id="signatureCanvas"></canvas>
+
+        <div class="signature-actions">
+          <button
+            type="button"
+            class="clear-signature"
+            id="clearSignature"
+          >
+            پاک کردن امضا
+          </button>
+        </div>
+
+      </div>
+
+      <div id="signatureStatus" class="signature-status">
+        هنوز امضایی ثبت نشده است.
+      </div>
+
+    </section>
+
+    <section class="section">
+
+      <label class="confirm-row">
+        <input id="confirmInfo" type="checkbox" required>
+
         <span>
-          تأیید می‌کنم اطلاعات واردشده تا حد امکان صحیح است و مسئولیت اطلاعات ثبت‌شده را می‌پذیرم.
+          تأیید می‌کنم اطلاعات واردشده صحیح است و با ثبت نهایی این درخواست موافقم.
         </span>
       </label>
 
     </section>
 
     <div class="actions">
-      <a class="btn-secondary" href="user.html">انصراف</a>
-      <button class="btn-primary" type="submit">ادامه و بررسی اطلاعات</button>
+
+      <a href="user.html" class="btn btn-secondary">
+        انصراف
+      </a>
+
+      <button type="submit" class="btn btn-primary">
+        بررسی اطلاعات
+      </button>
+
     </div>
 
   </form>
+
+
+  <!-- PREVIEW -->
+  <section id="previewSection" class="preview">
+
+    <h2>پیش‌نمایش نهایی</h2>
+
+    <p class="intro">
+      اطلاعات زیر را بررسی کنید. در صورت صحیح بودن، ثبت نهایی را انجام دهید.
+    </p>
+
+    <div class="preview-box">
+
+      <div class="preview-row">
+        <div class="preview-label">نوع ثبت</div>
+        <div id="previewFor" class="preview-value"></div>
+      </div>
+
+      <div class="preview-row" id="previewPersonRow">
+        <div class="preview-label">شاکی</div>
+        <div id="previewPerson" class="preview-value"></div>
+      </div>
+
+      <div class="preview-row">
+        <div class="preview-label">نوع شکایت</div>
+        <div id="previewCategory" class="preview-value"></div>
+      </div>
+
+      <div class="preview-row">
+        <div class="preview-label">عنوان</div>
+        <div id="previewSubject" class="preview-value"></div>
+      </div>
+
+      <div class="preview-row">
+        <div class="preview-label">شرح</div>
+        <div id="previewDescription" class="preview-value"></div>
+      </div>
+
+      <div class="preview-row">
+        <div class="preview-label">پیوست‌ها</div>
+        <div id="previewFiles" class="preview-value"></div>
+      </div>
+
+      <div class="preview-row">
+        <div class="preview-label">امضا</div>
+        <div class="preview-value">
+          <img id="previewSignature" class="preview-signature" alt="امضا">
+        </div>
+      </div>
+
+    </div>
+
+    <div class="actions">
+
+      <button
+        type="button"
+        id="editButton"
+        class="btn btn-secondary"
+      >
+        ویرایش اطلاعات
+      </button>
+
+      <button
+        type="button"
+        id="finalSubmit"
+        class="btn btn-primary"
+      >
+        تأیید و ثبت نهایی
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- SUCCESS -->
+  <section id="trackingResult" class="tracking-result">
+
+    <div class="success-icon">✅</div>
+
+    <h2>شکایت با موفقیت ثبت شد</h2>
+
+    <p>
+      پرونده شما با موفقیت ثبت شده است.
+    </p>
+
+    <div id="trackingCode" class="tracking-code"></div>
+
+    <p class="tracking-note">
+      این کد پیگیری را نزد خود نگه دارید.
+      برای پیگیری وضعیت پرونده به آن نیاز خواهید داشت.
+    </p>
+
+    <div class="actions">
+
+      <a href="user.html" class="btn btn-primary">
+        بازگشت به پنل
+      </a>
+
+      <button
+        type="button"
+        id="newComplaint"
+        class="btn btn-secondary"
+      >
+        ثبت شکایت جدید
+      </button>
+
+    </div>
+
+  </section>
 
 </div>
 
   </div>
 </div><script>
-  const forMe = document.getElementById("forMe");
-  const forAnother = document.getElementById("forAnother");
-  const anotherPerson = document.getElementById("anotherPerson");
-  const form = document.getElementById("complaintForm");
+/* =========================
+   ELEMENTS
+========================= */
 
-  function updateComplaintMode() {
-    anotherPerson.classList.toggle("show", forAnother.checked);
+const form = document.getElementById("complaintForm");
+
+const forMe = document.getElementById("forMe");
+const forAnother = document.getElementById("forAnother");
+const anotherPerson = document.getElementById("anotherPerson");
+
+const previewSection = document.getElementById("previewSection");
+const trackingResult = document.getElementById("trackingResult");
+
+const signatureCanvas = document.getElementById("signatureCanvas");
+const clearSignature = document.getElementById("clearSignature");
+const signatureStatus = document.getElementById("signatureStatus");
+
+let signatureStarted = false;
+
+
+/* =========================
+   COMPLAINT MODE
+========================= */
+
+function updateComplaintMode() {
+
+  anotherPerson.classList.toggle(
+    "show",
+    forAnother.checked
+  );
+
+}
+
+forMe.addEventListener("change", updateComplaintMode);
+forAnother.addEventListener("change", updateComplaintMode);
+
+
+/* =========================
+   SIGNATURE CANVAS
+========================= */
+
+const ctx = signatureCanvas.getContext("2d");
+
+function resizeCanvas() {
+
+  const oldImage = signatureCanvas.toDataURL();
+
+  const rect = signatureCanvas.getBoundingClientRect();
+
+  const ratio = window.devicePixelRatio || 1;
+
+  signatureCanvas.width = rect.width * ratio;
+  signatureCanvas.height = rect.height * ratio;
+
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#111827";
+
+  if (signatureStarted) {
+
+    const image = new Image();
+
+    image.onload = function() {
+      ctx.drawImage(
+        image,
+        0,
+        0,
+        rect.width,
+        rect.height
+      );
+    };
+
+    image.src = oldImage;
+  }
+}
+
+resizeCanvas();
+
+window.addEventListener("resize", resizeCanvas);
+
+
+function getPointerPosition(event) {
+
+  const rect = signatureCanvas.getBoundingClientRect();
+
+  return {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top
+  };
+
+}
+
+
+function startDrawing(event) {
+
+  event.preventDefault();
+
+  signatureStarted = true;
+
+  const pos = getPointerPosition(event);
+
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y);
+
+  signatureStatus.textContent =
+    "امضا ثبت شده است.";
+
+}
+
+
+function draw(event) {
+
+  if (!signatureStarted) return;
+
+  event.preventDefault();
+
+  const pos = getPointerPosition(event);
+
+  ctx.lineTo(pos.x, pos.y);
+  ctx.stroke();
+
+}
+
+
+function stopDrawing() {
+
+  ctx.closePath();
+
+}
+
+
+signatureCanvas.addEventListener(
+  "pointerdown",
+  startDrawing
+);
+
+signatureCanvas.addEventListener(
+  "pointermove",
+  draw
+);
+
+signatureCanvas.addEventListener(
+  "pointerup",
+  stopDrawing
+);
+
+signatureCanvas.addEventListener(
+  "pointercancel",
+  stopDrawing
+);
+
+signatureCanvas.addEventListener(
+  "pointerleave",
+  stopDrawing
+);
+
+
+clearSignature.addEventListener("click", function() {
+
+  ctx.clearRect(
+    0,
+    0,
+    signatureCanvas.width,
+    signatureCanvas.height
+  );
+
+  signatureStarted = false;
+
+  signatureStatus.textContent =
+    "هنوز امضایی ثبت نشده است.";
+
+});
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function getCategoryName(value) {
+
+  const categories = {
+    "1": "خدمات",
+    "2": "مالی",
+    "3": "اداری",
+    "4": "فنی",
+    "5": "رفتار و نحوه برخورد",
+    "6": "سایر"
+  };
+
+  return categories[value] || "نامشخص";
+}
+
+
+function toPersianDigits(value) {
+
+  return String(value).replace(
+    /\d/g,
+    d => "۰۱۲۳۴۵۶۷۸۹"[d]
+  );
+
+}
+
+
+function pad2(value) {
+
+  return String(value).padStart(2, "0");
+
+}
+
+
+/* =========================
+   APPROXIMATE HIJRI DATE
+========================= */
+
+/*
+  این نسخه برای نمایش اولیه است.
+  در نسخه Backend، تبدیل تاریخ قمری
+  باید با یک روش ثابت و سمت سرور انجام شود.
+*/
+
+function getHijriDate(date) {
+
+  const jd =
+    Math.floor(
+      date.getTime() / 86400000
+    ) + 2440588;
+
+  const l = jd - 1948440 + 10632;
+
+  const n =
+    Math.floor((l - 1) / 10631);
+
+  const l2 =
+    l - 10631 * n + 354;
+
+  const j =
+    Math.floor(
+      (10985 - l2) / 5316
+    ) *
+      Math.floor(
+        (50 * l2) / 17719
+      ) +
+    Math.floor(l2 / 5670) *
+      Math.floor(
+        (43 * l2) / 15238
+      );
+
+  const l3 =
+    l2 -
+    Math.floor(
+      (30 - j) / 15
+    ) *
+      Math.floor(
+        (17719 * j) / 50
+      ) -
+    Math.floor(j / 16) *
+      Math.floor(
+        (15238 * j) / 43
+      ) +
+    29;
+
+  const m =
+    Math.floor(
+      (24 * l3) / 709
+    );
+
+  const d =
+    l3 -
+    Math.floor(
+      (709 * m) / 24
+    );
+
+  const y =
+    30 * n +
+    j -
+    30;
+
+  return {
+    year: y,
+    month: m,
+    day: d
+  };
+
+}
+
+
+/* =========================
+   TRACKING CODE
+========================= */
+
+function generateTrackingCode(category) {
+
+  const now = new Date();
+
+  const gregorianYear =
+    now.getFullYear();
+
+  const gregorianMonth =
+    pad2(now.getMonth() + 1);
+
+  const hijri =
+    getHijriDate(now);
+
+  const hijriDay =
+    pad2(hijri.day);
+
+  /*
+    سال شمسی:
+    برای نسخه فعلی، سال جاری ایران
+    به صورت تقریبی از سال میلادی محاسبه می‌شود.
+    در Backend نهایی دقیق می‌شود.
+  */
+
+  const shamsiYear =
+    now.getFullYear() - 621;
+
+  const hour =
+    pad2(now.getHours());
+
+  const type =
+    String(category);
+
+  return (
+    toPersianDigits(shamsiYear) +
+    toPersianDigits(gregorianMonth) +
+    toPersianDigits(hijriDay) +
+    toPersianDigits(gregorianYear) +
+    toPersianDigits(hour) +
+    toPersianDigits(type)
+  );
+
+}
+
+
+/* =========================
+   PREVIEW
+========================= */
+
+form.addEventListener("submit", function(event) {
+
+  event.preventDefault();
+
+  const category =
+    document.getElementById("category").value;
+
+  const subject =
+    document.getElementById("subject").value.trim();
+
+  const description =
+    document.getElementById("description").value.trim();
+
+  const confirmInfo =
+    document.getElementById("confirmInfo").checked;
+
+  if (
+    !category ||
+    !subject ||
+    description.length < 20 ||
+    !confirmInfo
+  ) {
+
+    alert(
+      "لطفاً اطلاعات الزامی را کامل کنید."
+    );
+
+    return;
   }
 
-  forMe.addEventListener("change", updateComplaintMode);
-  forAnother.addEventListener("change", updateComplaintMode);
 
-  form.addEventListener("submit", function(event) {
-    event.preventDefault();
+  if (!signatureStarted) {
 
-    const category = document.getElementById("category").value;
-    const subject = document.getElementById("subject").value.trim();
-    const description = document.getElementById("description").value.trim();
-    const confirmInfo = document.getElementById("confirmInfo").checked;
+    alert(
+      "لطفاً امضای خود را ثبت کنید."
+    );
 
-    if (!category || !subject || description.length < 20 || !confirmInfo) {
-      alert("لطفاً تمام اطلاعات الزامی را به‌درستی تکمیل کنید.");
+    return;
+  }
+
+
+  if (forAnother.checked) {
+
+    const name =
+      document
+        .getElementById("complainantName")
+        .value
+        .trim();
+
+    const phone =
+      document
+        .getElementById("complainantPhone")
+        .value
+        .trim();
+
+    if (
+      !name ||
+      !/^09\d{9}$/.test(phone)
+    ) {
+
+      alert(
+        "نام و شماره تماس شاکی را به‌درستی وارد کنید."
+      );
+
       return;
     }
 
-    if (forAnother.checked) {
-      const name = document.getElementById("complainantName").value.trim();
-      const phone = document.getElementById("complainantPhone").value.trim();
+  }
 
-      if (!name || !/^09\d{9}$/.test(phone)) {
-        alert("نام و شماره تماس شاکی را به‌درستی وارد کنید.");
-        return;
-      }
-    }
 
-    alert(
-      "اطلاعات شکایت با موفقیت بررسی شد.\n\n" +
-      "در مرحله بعد، پیش‌نمایش و تأیید نهایی پرونده را اضافه می‌کنیم."
+  document.getElementById("previewFor").textContent =
+    forMe.checked
+      ? "برای خودم"
+      : "برای شخص دیگر";
+
+
+  const personRow =
+    document.getElementById("previewPersonRow");
+
+  if (forAnother.checked) {
+
+    const name =
+      document
+        .getElementById("complainantName")
+        .value
+        .trim();
+
+    const phone =
+      document
+        .getElementById("complainantPhone")
+        .value
+        .trim();
+
+    personRow.style.display = "grid";
+
+    document.getElementById("previewPerson").textContent =
+      name + " — " + phone;
+
+  } else {
+
+    personRow.style.display = "none";
+
+  }
+
+
+  document.getElementById("previewCategory").textContent =
+    getCategoryName(category);
+
+
+  document.getElementById("previewSubject").textContent =
+    subject;
+
+
+  document.getElementById("previewDescription").textContent =
+    description;
+
+
+  const files =
+    document.getElementById("attachments").files;
+
+  document.getElementById("previewFiles").textContent =
+    files.length
+      ? Array.from(files)
+          .map(file => file.name)
+          .join("، ")
+      : "بدون پیوست";
+
+
+  document.getElementById("previewSignature").src =
+    signatureCanvas.toDataURL("image/png");
+
+
+  form.style.display = "none";
+  previewSection.classList.add("show");
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+});
+
+
+/* =========================
+   EDIT
+========================= */
+
+document.getElementById("editButton")
+  .addEventListener("click", function() {
+
+    previewSection.classList.remove("show");
+
+    form.style.display = "block";
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  });
+
+
+/* =========================
+   FINAL SUBMIT
+========================= */
+
+document.getElementById("finalSubmit")
+  .addEventListener("click", function() {
+
+    const category =
+      document.getElementById("category").value;
+
+    /*
+      زمان دقیق ثبت نهایی همین لحظه گرفته می‌شود.
+    */
+
+    const trackingCode =
+      generateTrackingCode(category);
+
+
+    document.getElementById("trackingCode")
+      .textContent = trackingCode;
+
+
+    previewSection.classList.remove("show");
+
+    trackingResult.classList.add("show");
+
+
+    /*
+      فعلاً فقط برای نمایش در مرورگر ذخیره می‌شود.
+      بعداً این قسمت با API و D1 جایگزین خواهد شد.
+    */
+
+    localStorage.setItem(
+      "lastComplaintTrackingCode",
+      trackingCode
     );
+
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  });
+
+
+/* =========================
+   NEW COMPLAINT
+========================= */
+
+document.getElementById("newComplaint")
+  .addEventListener("click", function() {
+
+    location.reload();
+
   });
 </script></body>
-</html>
+  </html>
