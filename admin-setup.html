@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>راه‌اندازی مدیر سیستم</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      font-family: Tahoma, Arial, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 460px;
+      padding: 28px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 20px;
+      background: rgba(30,41,59,.9);
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
+
+    .warning {
+      margin: 0 0 24px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(245,158,11,.12);
+      color: #fbbf24;
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      margin: 15px 0 7px;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 10px;
+      outline: none;
+      background: #111827;
+      color: white;
+      font-size: 15px;
+    }
+
+    input:focus {
+      border-color: #60a5fa;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 22px;
+      padding: 14px;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    #result {
+      display: none;
+      margin-top: 18px;
+      padding: 13px;
+      border-radius: 10px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .success {
+      display: block !important;
+      background: rgba(34,197,94,.12);
+      color: #86efac;
+    }
+
+    .error {
+      display: block !important;
+      background: rgba(239,68,68,.12);
+      color: #fca5a5;
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="card">
+    <h1>راه‌اندازی مدیر سیستم</h1>
+
+    <div class="warning">
+      این صفحه فقط برای ساخت اولین حساب مدیر است.
+      Secret را فقط در فرم وارد کنید و آن را داخل کد یا GitHub قرار ندهید.
+    </div>
+
+    <form id="setupForm">
+
+      <label for="fullName">نام و نام خانوادگی مدیر</label>
+      <input
+        id="fullName"
+        name="fullName"
+        type="text"
+        autocomplete="name"
+        required
+      >
+
+      <label for="phone">شماره موبایل</label>
+      <input
+        id="phone"
+        name="phone"
+        type="tel"
+        inputmode="numeric"
+        placeholder="09123456789"
+        autocomplete="tel"
+        required
+      >
+
+      <label for="password">رمز عبور مدیر</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        minlength="8"
+        autocomplete="new-password"
+        required
+      >
+
+      <label for="confirmPassword">تکرار رمز عبور</label>
+      <input
+        id="confirmPassword"
+        name="confirmPassword"
+        type="password"
+        minlength="8"
+        autocomplete="new-password"
+        required
+      >
+
+      <label for="setupKey">ADMIN_SETUP_KEY</label>
+      <input
+        id="setupKey"
+        name="setupKey"
+        type="password"
+        autocomplete="off"
+        required
+      >
+
+      <button id="submitButton" type="submit">
+        ساخت حساب مدیر
+      </button>
+
+    </form>
+
+    <div id="result"></div>
+  </main>
+
+  <script>
+    const form = document.getElementById("setupForm");
+    const button = document.getElementById("submitButton");
+    const result = document.getElementById("result");
+
+    function normalizeDigits(value) {
+      return value
+        .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+        .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      result.className = "";
+      result.style.display = "none";
+      result.textContent = "";
+
+      const fullName = document.getElementById("fullName").value.trim();
+
+      const phone = normalizeDigits(
+        document.getElementById("phone").value.trim()
+      );
+
+      const password =
+        document.getElementById("password").value;
+
+      const confirmPassword =
+        document.getElementById("confirmPassword").value;
+
+      const setupKey =
+        document.getElementById("setupKey").value;
+
+      if (password !== confirmPassword) {
+        result.className = "error";
+        result.textContent = "رمز عبور و تکرار آن یکسان نیست.";
+        return;
+      }
+
+      if (password.length < 8) {
+        result.className = "error";
+        result.textContent = "رمز عبور باید حداقل ۸ کاراکتر باشد.";
+        return;
+      }
+
+      if (!/^09\d{9}$/.test(phone)) {
+        result.className = "error";
+        result.textContent =
+          "شماره موبایل را به شکل 09123456789 وارد کنید.";
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = "در حال ساخت حساب...";
+
+      try {
+        const response = await fetch("/api/admin/bootstrap", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Setup-Key": setupKey
+          },
+          body: JSON.stringify({
+            full_name: fullName,
+            phone: phone,
+            password: password
+          })
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.error || "ساخت حساب مدیر انجام نشد."
+          );
+        }
+
+        result.className = "success";
+        result.textContent =
+          "حساب مدیر با موفقیت ساخته شد.\n\n" +
+          "اکنون می‌توانید با شماره موبایل و رمز عبور خود وارد سیستم شوید.";
+
+        form.reset();
+
+      } catch (error) {
+        result.className = "error";
+        result.textContent =
+          error.message || "خطایی رخ داد.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "ساخت حساب مدیر";
+      }
+    });
+  </script>
+
+</body>
+</html>
