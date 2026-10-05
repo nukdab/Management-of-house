@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>ورود و ثبت‌نام | سامانه شکایات</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 110px 20px 50px;
+    }
+
+    .auth-box {
+      width: min(480px, 100%);
+      padding: 35px;
+      border-radius: 28px;
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .auth-icon {
+      width: 65px;
+      height: 65px;
+      margin: 0 auto 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 20px;
+      background: rgba(96,165,250,.12);
+      border: 1px solid rgba(96,165,250,.2);
+      font-size: 1.8rem;
+    }
+
+    .auth-header h1 {
+      margin: 0 0 10px;
+      font-size: 1.8rem;
+    }
+
+    .auth-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.9;
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      padding: 5px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      margin-bottom: 25px;
+    }
+
+    .auth-tab {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      transition: .25s ease;
+    }
+
+    .auth-tab.active {
+      color: var(--text);
+      background: rgba(96,165,250,.15);
+    }
+
+    .auth-form {
+      display: none;
+    }
+
+    .auth-form.active {
+      display: block;
+      animation: authFade .3s ease;
+    }
+
+    @keyframes authFade {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .form-group {
+      margin-bottom: 17px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: .86rem;
+      font-weight: 600;
+    }
+
+    .form-group input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px 15px;
+      border-radius: 13px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      transition: .25s ease;
+    }
+
+    .form-group input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(96,165,250,.08);
+    }
+
+    .form-group input::placeholder {
+      color: var(--muted);
+    }
+
+    .terms {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin: 15px 0 20px;
+      color: var(--muted);
+      font-size: .78rem;
+      line-height: 1.8;
+    }
+
+    .terms input {
+      margin-top: 5px;
+      accent-color: var(--primary);
+    }
+
+    .auth-submit {
+      width: 100%;
+      margin-top: 5px;
+    }
+
+    .auth-note {
+      text-align: center;
+      color: var(--muted);
+      font-size: .76rem;
+      line-height: 1.8;
+      margin-top: 20px;
+    }
+
+    .back-home {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .85rem;
+    }
+
+    .back-home:hover {
+      color: var(--text);
+    }
+
+    .error-message {
+      display: none;
+      padding: 11px 13px;
+      border-radius: 12px;
+      background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.2);
+      color: #f87171;
+      font-size: .8rem;
+      margin-bottom: 15px;
+    }
+
+    @media (max-width: 500px) {
+      .auth-box {
+        padding: 25px 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="aurora aurora-one"></div>
+  <div class="aurora aurora-two"></div>
+  <div class="aurora aurora-three"></div>
+
+
+  <header class="navbar glass">
+
+    <a href="index.html" class="brand">
+      <span class="brand-icon">◈</span>
+      <span>سامانه شکایات</span>
+    </a>
+
+    <div class="navbar-actions">
+
+      <button
+        id="themeToggle"
+        class="theme-toggle"
+        type="button"
+        aria-label="تغییر حالت نمایش"
+      >
+        ☀️
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <main class="auth-page">
+
+    <section class="auth-box glass reveal">
+
+      <div class="auth-header">
+
+        <div class="auth-icon">🔐</div>
+
+        <h1>ورود به سامانه</h1>
+
+        <p>
+          برای دسترسی به پنل کاربری وارد حساب خود شوید
+          یا یک حساب جدید ایجاد کنید.
+        </p>
+
+      </div>
+
+
+      <div class="auth-tabs">
+
+        <button
+          class="auth-tab active"
+          type="button"
+          data-tab="login"
+        >
+          ورود
+        </button>
+
+        <button
+          class="auth-tab"
+          type="button"
+          data-tab="register"
+        >
+          ثبت‌نام
+        </button>
+
+      </div>
+
+
+      <div id="loginError" class="error-message"></div>
+      <div id="registerError" class="error-message"></div>
+
+
+      <!-- LOGIN -->
+
+      <form id="loginForm" class="auth-form active">
+
+        <div class="form-group">
+
+          <label for="loginPhone">
+            شماره موبایل
+          </label>
+
+          <input
+            id="loginPhone"
+            type="tel"
+            inputmode="numeric"
+            placeholder="مثلاً ۰۹۱۲۱۲۳۴۵۶۷"
+            maxlength="11"
+            required
+          >
+
+        </div>
+
+
+        <button
+          class="btn btn-primary auth-submit"
+          type="submit"
+        >
+          ادامه و دریافت کد تأیید
+        </button>
+
+      </form>
+
+
+      <!-- REGISTER -->
+
+      <form id="registerForm" class="auth-form">
+
+        <div class="form-group">
+
+          <label for="registerName">
+            نام و نام خانوادگی
+          </label>
+
+          <input
+            id="registerName"
+            type="text"
+            placeholder="نام و نام خانوادگی"
+            autocomplete="name"
+            required
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="registerPhone">
+            شماره موبایل
+          </label>
+
+          <input
+            id="registerPhone"
+            type="tel"
+            inputmode="numeric"
+            placeholder="مثلاً ۰۹۱۲۱۲۳۴۵۶۷"
+            maxlength="11"
+            required
+          >
+
+        </div>
+
+
+        <div class="terms">
+
+          <input
+            id="terms"
+            type="checkbox"
+            required
+          >
+
+          <label for="terms">
+            قوانین استفاده از سامانه و صحت اطلاعات واردشده
+            را می‌پذیرم.
+          </label>
+
+        </div>
+
+
+        <button
+          class="btn btn-primary auth-submit"
+          type="submit"
+        >
+          ایجاد حساب و ادامه
+        </button>
+
+      </form>
+
+
+      <p class="auth-note">
+        احراز هویت واقعی و ارسال کد پیامکی در مرحله اتصال
+        Backend فعال خواهد شد.
+      </p>
+
+      <a href="index.html" class="back-home">
+        ← بازگشت به صفحه اصلی
+      </a>
+
+    </section>
+
+  </main>
+
+
+  <script src="js/app.js"></script>
+
+  <script>
+    const tabs = document.querySelectorAll(".auth-tab");
+    const forms = document.querySelectorAll(".auth-form");
+
+    tabs.forEach(tab => {
+
+      tab.addEventListener("click", () => {
+
+        const target = tab.dataset.tab;
+
+        tabs.forEach(item => {
+          item.classList.remove("active");
+        });
+
+        forms.forEach(form => {
+          form.classList.remove("active");
+        });
+
+        tab.classList.add("active");
+
+        document
+          .getElementById(target + "Form")
+          .classList.add("active");
+
+        document.getElementById("loginError").style.display = "none";
+        document.getElementById("registerError").style.display = "none";
+
+      });
+
+    });
+
+
+    function normalizePersianDigits(value) {
+
+      return value
+        .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+        .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+
+    }
+
+
+    document
+      .getElementById("loginForm")
+      .addEventListener("submit", event => {
+
+        event.preventDefault();
+
+        const phone = normalizePersianDigits(
+          document.getElementById("loginPhone").value.trim()
+        );
+
+        const error = document.getElementById("loginError");
+
+        if (!/^09\d{9}$/.test(phone)) {
+
+          error.textContent =
+            "لطفاً یک شماره موبایل معتبر وارد کنید.";
+
+          error.style.display = "block";
+
+          return;
+        }
+
+        alert(
+          "حساب شما آماده ورود است. اتصال OTP در مرحله Backend فعال می‌شود."
+        );
+
+      });
+
+
+    document
+      .getElementById("registerForm")
+      .addEventListener("submit", event => {
+
+        event.preventDefault();
+
+        const name =
+          document.getElementById("registerName").value.trim();
+
+        const phone = normalizePersianDigits(
+          document.getElementById("registerPhone").value.trim()
+        );
+
+        const terms =
+          document.getElementById("terms").checked;
+
+        const error =
+          document.getElementById("registerError");
+
+        if (name.length < 3) {
+
+          error.textContent =
+            "لطفاً نام و نام خانوادگی را وارد کنید.";
+
+          error.style.display = "block";
+
+          return;
+        }
+
+        if (!/^09\d{9}$/.test(phone)) {
+
+          error.textContent =
+            "لطفاً یک شماره موبایل معتبر وارد کنید.";
+
+          error.style.display = "block";
+
+          return;
+        }
+
+        if (!terms) {
+
+          error.textContent =
+            "برای ادامه باید قوانین سامانه را بپذیرید.";
+
+          error.style.display = "block";
+
+          return;
+        }
+
+        alert(
+          "ثبت‌نام اولیه انجام شد. تأیید شماره موبایل با OTP در مرحله Backend فعال می‌شود."
+        );
+
+      });
+  </script>
+
+</body>
+  </html>
