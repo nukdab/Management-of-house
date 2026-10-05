@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
+
 <head>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>ورود و ثبت‌نام | سامانه شکایات</title>
+  <title>سامانه ثبت و پیگیری شکایات</title>
+
+  <meta
+    name="description"
+    content="سامانه ثبت، مدیریت و پیگیری آنلاین شکایات"
+  >
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,203 +23,53 @@
 
   <link rel="stylesheet" href="css/style.css">
 
-  <style>
-    .auth-page {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 110px 20px 50px;
-    }
-
-    .auth-box {
-      width: min(480px, 100%);
-      padding: 35px;
-      border-radius: 28px;
-    }
-
-    .auth-header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
-    .auth-icon {
-      width: 65px;
-      height: 65px;
-      margin: 0 auto 18px;
-      display: grid;
-      place-items: center;
-      border-radius: 20px;
-      background: rgba(96,165,250,.12);
-      border: 1px solid rgba(96,165,250,.2);
-      font-size: 1.8rem;
-    }
-
-    .auth-header h1 {
-      margin: 0 0 10px;
-      font-size: 1.8rem;
-    }
-
-    .auth-header p {
-      margin: 0;
-      color: var(--muted);
-      font-size: .9rem;
-      line-height: 1.9;
-    }
-
-    .auth-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 5px;
-      padding: 5px;
-      border-radius: 14px;
-      background: rgba(255,255,255,.04);
-      margin-bottom: 25px;
-    }
-
-    .auth-tab {
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      padding: 12px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-family: inherit;
-      font-weight: 600;
-      transition: .25s ease;
-    }
-
-    .auth-tab.active {
-      color: var(--text);
-      background: rgba(96,165,250,.15);
-    }
-
-    .auth-form {
-      display: none;
-    }
-
-    .auth-form.active {
-      display: block;
-      animation: authFade .3s ease;
-    }
-
-    @keyframes authFade {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .form-group {
-      margin-bottom: 17px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: .86rem;
-      font-weight: 600;
-    }
-
-    .form-group input {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 14px 15px;
-      border-radius: 13px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.04);
-      color: var(--text);
-      font-family: inherit;
-      outline: none;
-      transition: .25s ease;
-    }
-
-    .form-group input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(96,165,250,.08);
-    }
-
-    .form-group input::placeholder {
-      color: var(--muted);
-    }
-
-    .terms {
-      display: flex;
-      align-items: flex-start;
-      gap: 9px;
-      margin: 15px 0 20px;
-      color: var(--muted);
-      font-size: .78rem;
-      line-height: 1.8;
-    }
-
-    .terms input {
-      margin-top: 5px;
-      accent-color: var(--primary);
-    }
-
-    .auth-submit {
-      width: 100%;
-      margin-top: 5px;
-    }
-
-    .auth-note {
-      text-align: center;
-      color: var(--muted);
-      font-size: .76rem;
-      line-height: 1.8;
-      margin-top: 20px;
-    }
-
-    .back-home {
-      display: block;
-      text-align: center;
-      margin-top: 20px;
-      color: var(--muted);
-      text-decoration: none;
-      font-size: .85rem;
-    }
-
-    .back-home:hover {
-      color: var(--text);
-    }
-
-    .error-message {
-      display: none;
-      padding: 11px 13px;
-      border-radius: 12px;
-      background: rgba(239,68,68,.1);
-      border: 1px solid rgba(239,68,68,.2);
-      color: #f87171;
-      font-size: .8rem;
-      margin-bottom: 15px;
-    }
-
-    @media (max-width: 500px) {
-      .auth-box {
-        padding: 25px 20px;
-      }
-    }
-  </style>
 </head>
 
+
 <body>
+
+  <!-- Background Aurora -->
 
   <div class="aurora aurora-one"></div>
   <div class="aurora aurora-two"></div>
   <div class="aurora aurora-three"></div>
 
 
+  <!-- Header -->
+
   <header class="navbar glass">
 
-    <a href="index.html" class="brand">
+    <a href="#home" class="brand">
+
       <span class="brand-icon">◈</span>
-      <span>سامانه شکایات</span>
+
+      <span>
+        سامانه شکایات
+      </span>
+
     </a>
+
+
+    <nav class="navigation">
+
+      <a href="#home">
+        خانه
+      </a>
+
+      <a href="#features">
+        امکانات
+      </a>
+
+      <a href="#security">
+        امنیت
+      </a>
+
+      <a href="#about">
+        درباره سامانه
+      </a>
+
+    </nav>
+
 
     <div class="navbar-actions">
 
@@ -225,292 +82,757 @@
         ☀️
       </button>
 
+
+      <a
+        href="auth.html"
+        class="btn btn-primary header-login"
+      >
+        ورود به پنل
+      </a>
+
     </div>
 
   </header>
 
 
-  <main class="auth-page">
 
-    <section class="auth-box glass reveal">
+  <main>
 
-      <div class="auth-header">
 
-        <div class="auth-icon">🔐</div>
+    <!-- =========================
+         HERO
+    ========================== -->
 
-        <h1>ورود به سامانه</h1>
+    <section
+      id="home"
+      class="hero section"
+    >
 
-        <p>
-          برای دسترسی به پنل کاربری وارد حساب خود شوید
-          یا یک حساب جدید ایجاد کنید.
+      <div class="hero-content reveal">
+
+
+        <div class="eyebrow">
+
+          <span class="eyebrow-dot"></span>
+
+          سامانه مدیریت و پیگیری پرونده‌ها
+
+        </div>
+
+
+        <h1>
+
+          صدای شما،
+
+          <span>
+            برای ما اهمیت دارد.
+          </span>
+
+        </h1>
+
+
+        <p class="hero-description">
+
+          شکایت خود را به‌صورت امن ثبت کنید و مراحل رسیدگی به پرونده
+          را شفاف و آنلاین پیگیری کنید.
+
         </p>
 
+
+        <div class="hero-buttons">
+
+
+          <a
+            href="auth.html"
+            class="btn btn-primary btn-large"
+          >
+
+            ورود به پنل کاربری
+
+            <span>
+              ←
+            </span>
+
+          </a>
+
+
+          <a
+            href="auth.html"
+            class="btn btn-secondary btn-large"
+          >
+
+            ثبت شکایت
+
+            <span>
+              ＋
+            </span>
+
+          </a>
+
+
+        </div>
+
+
+        <div class="trust-items">
+
+
+          <span>
+
+            <b>
+              ✓
+            </b>
+
+            ثبت امن اطلاعات
+
+          </span>
+
+
+          <span>
+
+            <b>
+              ✓
+            </b>
+
+            پیگیری با کد پرونده
+
+          </span>
+
+
+          <span>
+
+            <b>
+              ✓
+            </b>
+
+            اعلان تغییر وضعیت
+
+          </span>
+
+
+        </div>
+
+
       </div>
 
 
-      <div class="auth-tabs">
 
-        <button
-          class="auth-tab active"
-          type="button"
-          data-tab="login"
-        >
-          ورود
-        </button>
+      <!-- Dashboard Preview -->
 
-        <button
-          class="auth-tab"
-          type="button"
-          data-tab="register"
-        >
-          ثبت‌نام
-        </button>
+
+      <div class="dashboard-wrapper reveal">
+
+
+        <div class="dashboard glass">
+
+
+          <div class="dashboard-header">
+
+
+            <div>
+
+              <small>
+                داشبورد
+              </small>
+
+              <h3>
+                نمای کلی پرونده‌ها
+              </h3>
+
+            </div>
+
+
+            <span class="online-status">
+
+              <i></i>
+
+              فعال
+
+            </span>
+
+
+          </div>
+
+
+
+          <div class="dashboard-stats">
+
+
+            <div class="stat-card">
+
+              <strong>
+                ۱۲
+              </strong>
+
+              <span>
+                کل شکایت‌ها
+              </span>
+
+            </div>
+
+
+            <div class="stat-card">
+
+              <strong>
+                ۴
+              </strong>
+
+              <span>
+                در حال بررسی
+              </span>
+
+            </div>
+
+
+            <div class="stat-card">
+
+              <strong>
+                ۵
+              </strong>
+
+              <span>
+                پاسخ داده شده
+              </span>
+
+            </div>
+
+
+            <div class="stat-card">
+
+              <strong>
+                ۳
+              </strong>
+
+              <span>
+                مختومه
+              </span>
+
+            </div>
+
+
+          </div>
+
+
+
+          <div class="timeline">
+
+
+            <div class="timeline-line"></div>
+
+
+            <div class="timeline-item completed">
+
+
+              <div class="timeline-icon">
+                ✓
+              </div>
+
+
+              <div class="timeline-content">
+
+                <strong>
+                  ثبت شکایت
+                </strong>
+
+                <span>
+                  پرونده با موفقیت ثبت شد
+                </span>
+
+              </div>
+
+
+            </div>
+
+
+
+            <div class="timeline-item completed">
+
+
+              <div class="timeline-icon">
+                ✓
+              </div>
+
+
+              <div class="timeline-content">
+
+                <strong>
+                  بررسی اولیه
+                </strong>
+
+                <span>
+                  اطلاعات پرونده بررسی شد
+                </span>
+
+              </div>
+
+
+            </div>
+
+
+
+            <div class="timeline-item active">
+
+
+              <div class="timeline-icon">
+                •
+              </div>
+
+
+              <div class="timeline-content">
+
+                <strong>
+                  ارجاع
+                </strong>
+
+                <span>
+                  در انتظار بررسی مسئول رسیدگی
+                </span>
+
+              </div>
+
+
+            </div>
+
+
+
+            <div class="timeline-item">
+
+
+              <div class="timeline-icon">
+                ۴
+              </div>
+
+
+              <div class="timeline-content">
+
+                <strong>
+                  پاسخ نهایی
+                </strong>
+
+                <span>
+                  پس از تکمیل رسیدگی
+                </span>
+
+              </div>
+
+
+            </div>
+
+
+          </div>
+
+
+        </div>
+
 
       </div>
 
-
-      <div id="loginError" class="error-message"></div>
-      <div id="registerError" class="error-message"></div>
-
-
-      <!-- LOGIN -->
-
-      <form id="loginForm" class="auth-form active">
-
-        <div class="form-group">
-
-          <label for="loginPhone">
-            شماره موبایل
-          </label>
-
-          <input
-            id="loginPhone"
-            type="tel"
-            inputmode="numeric"
-            placeholder="مثلاً ۰۹۱۲۱۲۳۴۵۶۷"
-            maxlength="11"
-            required
-          >
-
-        </div>
-
-
-        <button
-          class="btn btn-primary auth-submit"
-          type="submit"
-        >
-          ادامه و دریافت کد تأیید
-        </button>
-
-      </form>
-
-
-      <!-- REGISTER -->
-
-      <form id="registerForm" class="auth-form">
-
-        <div class="form-group">
-
-          <label for="registerName">
-            نام و نام خانوادگی
-          </label>
-
-          <input
-            id="registerName"
-            type="text"
-            placeholder="نام و نام خانوادگی"
-            autocomplete="name"
-            required
-          >
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="registerPhone">
-            شماره موبایل
-          </label>
-
-          <input
-            id="registerPhone"
-            type="tel"
-            inputmode="numeric"
-            placeholder="مثلاً ۰۹۱۲۱۲۳۴۵۶۷"
-            maxlength="11"
-            required
-          >
-
-        </div>
-
-
-        <div class="terms">
-
-          <input
-            id="terms"
-            type="checkbox"
-            required
-          >
-
-          <label for="terms">
-            قوانین استفاده از سامانه و صحت اطلاعات واردشده
-            را می‌پذیرم.
-          </label>
-
-        </div>
-
-
-        <button
-          class="btn btn-primary auth-submit"
-          type="submit"
-        >
-          ایجاد حساب و ادامه
-        </button>
-
-      </form>
-
-
-      <p class="auth-note">
-        احراز هویت واقعی و ارسال کد پیامکی در مرحله اتصال
-        Backend فعال خواهد شد.
-      </p>
-
-      <a href="index.html" class="back-home">
-        ← بازگشت به صفحه اصلی
-      </a>
 
     </section>
+
+
+
+    <!-- =========================
+         FEATURES
+    ========================== -->
+
+
+    <section
+      id="features"
+      class="section features-section"
+    >
+
+
+      <div class="section-heading reveal">
+
+
+        <span>
+          امکانات سامانه
+        </span>
+
+
+        <h2>
+
+          همه‌چیز برای پیگیری
+
+          <em>
+            شفاف
+          </em>
+
+        </h2>
+
+
+        <p>
+
+          از ثبت اولیه تا پاسخ نهایی، وضعیت پرونده را
+          در یک محیط ساده و منظم دنبال کنید.
+
+        </p>
+
+
+      </div>
+
+
+
+      <div class="feature-grid">
+
+
+        <!-- Feature 1 -->
+
+
+        <article class="feature-card glass reveal">
+
+
+          <div class="feature-icon">
+            ＋
+          </div>
+
+
+          <h3>
+            ثبت شکایت
+          </h3>
+
+
+          <p>
+
+            درخواست یا شکایت خود را با جزئیات ثبت کنید
+            و اطلاعات پرونده را بررسی و تأیید نمایید.
+
+          </p>
+
+
+          <a href="auth.html">
+
+            شروع ثبت
+
+            <span>
+              ←
+            </span>
+
+          </a>
+
+
+        </article>
+
+
+
+        <!-- Feature 2 -->
+
+
+        <article class="feature-card glass reveal">
+
+
+          <div class="feature-icon">
+            ⌁
+          </div>
+
+
+          <h3>
+            پیگیری پرونده
+          </h3>
+
+
+          <p>
+
+            با کد پیگیری، آخرین وضعیت پرونده و مراحل
+            رسیدگی را مشاهده کنید.
+
+          </p>
+
+
+          <a href="auth.html">
+
+            پیگیری پرونده
+
+            <span>
+              ←
+            </span>
+
+          </a>
+
+
+        </article>
+
+
+
+        <!-- Feature 3 -->
+
+
+        <article class="feature-card glass reveal">
+
+
+          <div class="feature-icon">
+            ◔
+          </div>
+
+
+          <h3>
+            اعلان‌ها
+          </h3>
+
+
+          <p>
+
+            از تغییر وضعیت پرونده و مراحل جدید
+            رسیدگی مطلع شوید.
+
+          </p>
+
+
+          <a href="auth.html">
+
+            ورود به پنل
+
+            <span>
+              ←
+            </span>
+
+          </a>
+
+
+        </article>
+
+
+      </div>
+
+
+    </section>
+
+
+
+    <!-- =========================
+         SECURITY
+    ========================== -->
+
+
+    <section
+      id="security"
+      class="section"
+    >
+
+
+      <div class="security-card glass reveal">
+
+
+        <div class="security-content">
+
+
+          <span class="eyebrow">
+
+            حریم خصوصی و امنیت
+
+          </span>
+
+
+          <h2>
+
+            اطلاعات شما،
+
+            <span>
+              با دقت نگهداری می‌شود.
+            </span>
+
+          </h2>
+
+
+          <p>
+
+            اطلاعات شما با دسترسی کنترل‌شده و امنیت مناسب
+            نگهداری می‌شود. تغییرات مهم پرونده نیز قابل ثبت
+            و پیگیری خواهند بود.
+
+          </p>
+
+
+        </div>
+
+
+
+        <div class="security-badge">
+
+
+          <div class="security-symbol">
+            🔒
+          </div>
+
+
+          <div>
+
+            <strong>
+              دسترسی کنترل‌شده
+            </strong>
+
+            <span>
+              ثبت رویدادهای پرونده
+            </span>
+
+          </div>
+
+
+        </div>
+
+
+      </div>
+
+
+    </section>
+
+
+
+    <!-- =========================
+         ABOUT
+    ========================== -->
+
+
+    <section
+      id="about"
+      class="section about-section"
+    >
+
+
+      <div class="section-heading reveal">
+
+
+        <span>
+          درباره سامانه
+        </span>
+
+
+        <h2>
+
+          یک مسیر ساده برای
+
+          <em>
+            پیگیری پرونده
+          </em>
+
+        </h2>
+
+
+        <p>
+
+          این سامانه برای ثبت منظم درخواست‌ها و شکایات،
+          مدیریت مراحل رسیدگی و ارائه یک مسیر شفاف برای
+          پیگیری پرونده طراحی شده است.
+
+        </p>
+
+
+      </div>
+
+
+
+      <div class="about-grid">
+
+
+        <div class="about-item glass reveal">
+
+
+          <strong>
+            ۰۱
+          </strong>
+
+
+          <h3>
+            ثبت اطلاعات
+          </h3>
+
+
+          <p>
+            اطلاعات درخواست و شرح شکایت را ثبت کنید.
+          </p>
+
+
+        </div>
+
+
+
+        <div class="about-item glass reveal">
+
+
+          <strong>
+            ۰۲
+          </strong>
+
+
+          <h3>
+            بررسی پرونده
+          </h3>
+
+
+          <p>
+            پرونده وارد مراحل بررسی و رسیدگی می‌شود.
+          </p>
+
+
+        </div>
+
+
+
+        <div class="about-item glass reveal">
+
+
+          <strong>
+            ۰۳
+          </strong>
+
+
+          <h3>
+            پیگیری آنلاین
+          </h3>
+
+
+          <p>
+            مراحل پرونده را از طریق پنل مشاهده کنید.
+          </p>
+
+
+        </div>
+
+
+      </div>
+
+
+    </section>
+
 
   </main>
 
 
+
+  <!-- =========================
+       FOOTER
+  ========================== -->
+
+
+  <footer class="footer">
+
+
+    <div>
+
+      <strong>
+        سامانه ثبت و پیگیری شکایات
+      </strong>
+
+      <span>
+        مدیریت منظم و شفاف پرونده‌ها
+      </span>
+
+    </div>
+
+
+    <div>
+
+      © سامانه ثبت و پیگیری شکایات
+
+    </div>
+
+
+  </footer>
+
+
+
   <script src="js/app.js"></script>
 
-  <script>
-    const tabs = document.querySelectorAll(".auth-tab");
-    const forms = document.querySelectorAll(".auth-form");
-
-    tabs.forEach(tab => {
-
-      tab.addEventListener("click", () => {
-
-        const target = tab.dataset.tab;
-
-        tabs.forEach(item => {
-          item.classList.remove("active");
-        });
-
-        forms.forEach(form => {
-          form.classList.remove("active");
-        });
-
-        tab.classList.add("active");
-
-        document
-          .getElementById(target + "Form")
-          .classList.add("active");
-
-        document.getElementById("loginError").style.display = "none";
-        document.getElementById("registerError").style.display = "none";
-
-      });
-
-    });
-
-
-    function normalizePersianDigits(value) {
-
-      return value
-        .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
-        .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
-
-    }
-
-
-    document
-      .getElementById("loginForm")
-      .addEventListener("submit", event => {
-
-        event.preventDefault();
-
-        const phone = normalizePersianDigits(
-          document.getElementById("loginPhone").value.trim()
-        );
-
-        const error = document.getElementById("loginError");
-
-        if (!/^09\d{9}$/.test(phone)) {
-
-          error.textContent =
-            "لطفاً یک شماره موبایل معتبر وارد کنید.";
-
-          error.style.display = "block";
-
-          return;
-        }
-
-        alert(
-          "حساب شما آماده ورود است. اتصال OTP در مرحله Backend فعال می‌شود."
-        );
-
-      });
-
-
-    document
-      .getElementById("registerForm")
-      .addEventListener("submit", event => {
-
-        event.preventDefault();
-
-        const name =
-          document.getElementById("registerName").value.trim();
-
-        const phone = normalizePersianDigits(
-          document.getElementById("registerPhone").value.trim()
-        );
-
-        const terms =
-          document.getElementById("terms").checked;
-
-        const error =
-          document.getElementById("registerError");
-
-        if (name.length < 3) {
-
-          error.textContent =
-            "لطفاً نام و نام خانوادگی را وارد کنید.";
-
-          error.style.display = "block";
-
-          return;
-        }
-
-        if (!/^09\d{9}$/.test(phone)) {
-
-          error.textContent =
-            "لطفاً یک شماره موبایل معتبر وارد کنید.";
-
-          error.style.display = "block";
-
-          return;
-        }
-
-        if (!terms) {
-
-          error.textContent =
-            "برای ادامه باید قوانین سامانه را بپذیرید.";
-
-          error.style.display = "block";
-
-          return;
-        }
-
-        alert(
-          "ثبت‌نام اولیه انجام شد. تأیید شماره موبایل با OTP در مرحله Backend فعال می‌شود."
-        );
-
-      });
-  </script>
-
 </body>
-  </html>
+
+</html>
