@@ -13,25 +13,22 @@
 
   <header class="site-header">
     <div class="container header-inner">
-      <a href="/" class="brand">
-        <span class="brand-mark">⚖</span>
-        <span>سامانه رسیدگی</span>
-      </a>
+      <a href="/" class="brand">سامانه رسیدگی</a>
 
       <div class="header-actions">
         <button
           type="button"
-          class="theme-toggle"
+          class="icon-button"
           id="themeToggle"
-          aria-label="تغییر حالت نمایش"
-          title="تغییر حالت نمایش"
+          aria-label="تغییر پوسته"
+          title="تغییر پوسته"
         >
-          ☀️
+          🌙
         </button>
 
         <button
           type="button"
-          class="btn btn-secondary btn-small"
+          class="btn btn-secondary"
           id="logoutButton"
         >
           خروج
@@ -40,13 +37,16 @@
     </div>
   </header>
 
-  <main class="container admin-container">
+  <main class="container admin-main">
 
+    <!-- عنوان -->
     <section class="page-heading">
       <div>
         <span class="eyebrow">مدیریت سامانه</span>
         <h1>پنل مدیریت</h1>
-        <p id="adminWelcome">در حال دریافت اطلاعات مدیر...</p>
+        <p id="adminWelcome">
+          مدیریت پرونده‌ها، پیوست‌ها، ابلاغیه‌ها و سوابق رسیدگی
+        </p>
       </div>
 
       <a href="/complaint.html" class="btn btn-primary">
@@ -54,10 +54,8 @@
       </a>
     </section>
 
-    <div id="adminAlert" class="alert hidden" role="alert"></div>
-
     <!-- آمار -->
-    <section class="stats-grid admin-stats">
+    <section class="stats-grid">
 
       <article class="stat-card">
         <span class="stat-label">کل پرونده‌ها</span>
@@ -80,31 +78,41 @@
       </article>
 
       <article class="stat-card">
-        <span class="stat-label">مختومه</span>
+        <span class="stat-label">بسته‌شده</span>
         <strong id="closedCases">۰</strong>
       </article>
 
     </section>
 
-    <!-- جستجو و فیلتر -->
-    <section class="panel admin-panel">
+    <!-- پیام -->
+    <div id="adminMessage" class="form-message" hidden></div>
+
+    <!-- مدیریت پرونده‌ها -->
+    <section class="panel-card">
 
       <div class="panel-header">
         <div>
-          <h2>پرونده‌ها</h2>
-          <p>جستجو، مشاهده و مدیریت پرونده‌های ثبت‌شده</p>
+          <span class="eyebrow">پرونده‌ها</span>
+          <h2>فهرست پرونده‌ها</h2>
         </div>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          id="refreshCasesButton"
+        >
+          بروزرسانی
+        </button>
       </div>
 
-      <form id="searchForm" class="admin-search-form">
+      <div class="admin-filters">
 
         <div class="form-group">
-          <label for="searchInput">کد پیگیری</label>
+          <label for="caseSearch">جستجو</label>
           <input
-            type="text"
-            id="searchInput"
-            name="search"
-            placeholder="کد پیگیری را وارد کنید"
+            type="search"
+            id="caseSearch"
+            placeholder="کد رهگیری، نام یا شماره تلفن..."
             autocomplete="off"
           >
         </div>
@@ -112,51 +120,35 @@
         <div class="form-group">
           <label for="statusFilter">وضعیت</label>
 
-          <select id="statusFilter" name="status">
+          <select id="statusFilter">
             <option value="">همه وضعیت‌ها</option>
             <option value="new">جدید</option>
             <option value="under_review">در حال بررسی</option>
-            <option value="answered">پاسخ داده شده</option>
-            <option value="closed">مختومه</option>
+            <option value="answered">پاسخ داده‌شده</option>
+            <option value="closed">بسته‌شده</option>
           </select>
         </div>
 
-        <div class="admin-search-actions">
-          <button type="submit" class="btn btn-primary">
-            جستجو
-          </button>
+      </div>
 
-          <button
-            type="button"
-            class="btn btn-secondary"
-            id="clearSearchButton"
-          >
-            پاک کردن
-          </button>
-        </div>
-
-      </form>
-
-      <div id="casesLoading" class="loading-state hidden">
+      <div id="casesLoading" class="empty-state">
         در حال دریافت پرونده‌ها...
       </div>
 
-      <div id="casesEmpty" class="empty-state hidden">
-        <div class="empty-icon">📂</div>
-        <h3>پرونده‌ای پیدا نشد</h3>
-        <p>با تغییر فیلترها یا عبارت جستجو دوباره تلاش کنید.</p>
+      <div id="casesEmpty" class="empty-state" hidden>
+        پرونده‌ای پیدا نشد.
       </div>
 
-      <div id="casesTableWrapper" class="table-wrapper">
+      <div class="table-wrapper" id="casesTableWrapper" hidden>
 
         <table class="data-table">
 
           <thead>
             <tr>
-              <th>کد پیگیری</th>
+              <th>کد رهگیری</th>
+              <th>شاکی</th>
               <th>موضوع</th>
               <th>دسته‌بندی</th>
-              <th>ثبت‌کننده</th>
               <th>وضعیت</th>
               <th>تاریخ ثبت</th>
               <th>عملیات</th>
@@ -173,35 +165,40 @@
 
     <!-- جزئیات پرونده -->
     <section
-      class="panel admin-panel hidden"
-      id="caseDetailsPanel"
+      class="panel-card"
+      id="caseDetailsSection"
+      hidden
     >
 
       <div class="panel-header">
+
         <div>
-          <span class="eyebrow">جزئیات پرونده</span>
-          <h2 id="detailSubject">—</h2>
-          <p id="detailTrackingCode">—</p>
+          <span class="eyebrow">جزئیات</span>
+          <h2>پرونده انتخاب‌شده</h2>
         </div>
 
         <button
           type="button"
-          class="btn btn-secondary btn-small"
-          id="closeDetailsButton"
+          class="btn btn-secondary"
+          id="closeCaseDetailsButton"
         >
           بستن
         </button>
+
       </div>
 
-      <div class="case-detail-grid">
+      <div id="caseDetailsMessage" class="form-message" hidden></div>
+
+      <!-- اطلاعات اصلی -->
+      <div class="detail-grid">
 
         <div class="detail-item">
-          <span>کد پیگیری</span>
-          <strong id="detailCode">—</strong>
+          <span>کد رهگیری</span>
+          <strong id="detailTrackingCode">—</strong>
         </div>
 
         <div class="detail-item">
-          <span>وضعیت</span>
+          <span>وضعیت فعلی</span>
           <strong id="detailStatus">—</strong>
         </div>
 
@@ -217,24 +214,31 @@
 
         <div class="detail-item">
           <span>نام ثبت‌کننده</span>
-          <strong id="detailUserName">—</strong>
+          <strong id="detailOwnerName">—</strong>
         </div>
 
         <div class="detail-item">
-          <span>شماره تماس</span>
-          <strong id="detailUserPhone">—</strong>
+          <span>شماره تماس ثبت‌کننده</span>
+          <strong id="detailOwnerPhone">—</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>نوع شکایت</span>
+          <strong id="detailComplainantType">—</strong>
         </div>
 
       </div>
 
-      <!-- مشخصات شخص مورد شکایت -->
+      <!-- اطلاعات شخص دیگر -->
       <div
-        class="detail-section hidden"
+        class="detail-section"
         id="otherPersonSection"
+        hidden
       >
-        <h3>مشخصات شخص معرفی‌شده</h3>
 
-        <div class="case-detail-grid">
+        <h3>اطلاعات شخص مورد شکایت / ذی‌نفع</h3>
+
+        <div class="detail-grid">
 
           <div class="detail-item">
             <span>نام و نام خانوادگی</span>
@@ -252,14 +256,25 @@
           </div>
 
         </div>
+
       </div>
 
-      <!-- شرح -->
+      <!-- موضوع و شرح -->
+      <div class="detail-section">
+
+        <h3>موضوع شکایت</h3>
+
+        <div class="detail-text-box" id="detailSubject">
+          —
+        </div>
+
+      </div>
+
       <div class="detail-section">
 
         <h3>شرح شکایت</h3>
 
-        <div class="description-box" id="detailDescription">
+        <div class="detail-text-box large" id="detailDescription">
           —
         </div>
 
@@ -268,30 +283,28 @@
       <!-- امضا -->
       <div class="detail-section">
 
-        <h3>امضای ثبت‌کننده</h3>
-
-        <div class="signature-view">
-          <img
-            id="detailSignature"
-            src=""
-            alt="امضای ثبت‌کننده"
-            class="signature-image hidden"
-          >
-
-          <p id="noSignatureMessage" class="muted-text">
-            امضایی ثبت نشده است.
-          </p>
+        <div class="section-title-row">
+          <h3>امضای ثبت‌شده</h3>
+          <span class="muted-text">
+            امضای ثبت‌شده هنگام ارسال پرونده
+          </span>
         </div>
 
-      </div>
+        <div class="signature-preview" id="signaturePreview">
 
-      <!-- پیوست‌ها -->
-      <div class="detail-section">
+          <div
+            class="empty-state"
+            id="signatureEmpty"
+          >
+            برای این پرونده امضایی ثبت نشده است.
+          </div>
 
-        <h3>پیوست‌ها</h3>
+          <img
+            id="signatureImage"
+            alt="امضای ثبت‌شده"
+            hidden
+          >
 
-        <div id="detailAttachments" class="attachment-list">
-          <p class="muted-text">پیوستی وجود ندارد.</p>
         </div>
 
       </div>
@@ -301,112 +314,198 @@
 
         <h3>تغییر وضعیت پرونده</h3>
 
-        <form id="statusForm" class="status-form">
-
-          <input type="hidden" id="statusCaseId">
+        <div class="inline-form">
 
           <div class="form-group">
-            <label for="caseStatus">وضعیت جدید</label>
+            <label for="caseStatusSelect">وضعیت جدید</label>
 
-            <select id="caseStatus">
+            <select id="caseStatusSelect">
               <option value="new">جدید</option>
               <option value="under_review">در حال بررسی</option>
-              <option value="answered">پاسخ داده شده</option>
-              <option value="closed">مختومه</option>
+              <option value="answered">پاسخ داده‌شده</option>
+              <option value="closed">بسته‌شده</option>
             </select>
           </div>
 
-          <div class="form-group">
-            <label for="statusDescription">
+          <div class="form-group grow">
+            <label for="statusNote">
               توضیح تغییر وضعیت
             </label>
 
-            <textarea
-              id="statusDescription"
-              rows="4"
-              maxlength="1000"
-              placeholder="توضیح مربوط به این تغییر وضعیت..."
-            ></textarea>
+            <input
+              type="text"
+              id="statusNote"
+              maxlength="500"
+              placeholder="توضیح اختیاری..."
+            >
           </div>
 
-          <button type="submit" class="btn btn-primary">
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="updateStatusButton"
+          >
             ذخیره وضعیت
           </button>
 
-        </form>
+        </div>
 
       </div>
 
-      <!-- تاریخچه -->
+      <!-- پیوست‌ها -->
       <div class="detail-section">
 
-        <h3>تاریخچه پرونده</h3>
+        <div class="section-title-row">
 
-        <div id="caseTimeline" class="timeline">
-          <p class="muted-text">در حال دریافت تاریخچه...</p>
+          <div>
+            <h3>پیوست‌ها و مدارک</h3>
+            <p class="muted-text">
+              مدیر سامانه می‌تواند شکواییه، دادخواست یا سایر مدارک را به این پرونده اضافه کند.
+            </p>
+          </div>
+
+        </div>
+
+        <div id="attachmentsContainer">
+
+          <div class="empty-state">
+            هنوز پیوستی برای این پرونده ثبت نشده است.
+          </div>
+
+        </div>
+
+        <div class="attachment-upload-box">
+
+          <h4>افزودن پیوست جدید</h4>
+
+          <div class="form-group">
+
+            <label for="adminAttachmentInput">
+              انتخاب فایل
+            </label>
+
+            <input
+              type="file"
+              id="adminAttachmentInput"
+              multiple
+            >
+
+            <small class="form-help">
+              حداکثر ۵ فایل، حداکثر ۵۰۰ کیلوبایت برای هر فایل و مجموعاً ۱.۵ مگابایت.
+            </small>
+
+          </div>
+
+          <div
+            id="adminAttachmentList"
+            class="attachment-list"
+          ></div>
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="uploadAttachmentsButton"
+          >
+            افزودن پیوست به پرونده
+          </button>
+
         </div>
 
       </div>
 
-    </section>
+      <!-- رویدادهای پرونده -->
+      <div class="detail-section">
 
-    <!-- ابلاغیه -->
-    <section class="panel admin-panel">
+        <h3>سوابق رسیدگی</h3>
 
-      <div class="panel-header">
-        <div>
-          <h2>ارسال ابلاغیه داخلی</h2>
-          <p>
-            پیام را برای کاربر یک پرونده ارسال کنید.
-          </p>
+        <div
+          id="caseEventsContainer"
+          class="timeline"
+        >
+          <div class="empty-state">
+            در حال دریافت سوابق...
+          </div>
         </div>
+
       </div>
 
-      <form id="notificationForm">
+      <!-- ابلاغیه -->
+      <div class="detail-section">
 
-        <input type="hidden" id="notificationCaseId">
+        <h3>ارسال ابلاغیه / اعلان</h3>
 
         <div class="form-group">
-          <label for="notificationTitle">عنوان ابلاغیه</label>
+
+          <label for="notificationTitle">
+            عنوان
+          </label>
 
           <input
             type="text"
             id="notificationTitle"
             maxlength="200"
             placeholder="مثلاً: اطلاع‌رسانی درباره پرونده"
-            required
           >
+
         </div>
 
         <div class="form-group">
-          <label for="notificationMessage">متن ابلاغیه</label>
+
+          <label for="notificationMessage">
+            متن ابلاغیه
+          </label>
 
           <textarea
             id="notificationMessage"
             rows="6"
             maxlength="5000"
-            placeholder="متن پیام را وارد کنید..."
-            required
+            placeholder="متن ابلاغیه را وارد کنید..."
           ></textarea>
+
         </div>
 
         <button
-          type="submit"
+          type="button"
           class="btn btn-primary"
+          id="sendNotificationButton"
         >
           ارسال ابلاغیه
         </button>
 
-      </form>
+      </div>
 
     </section>
 
-    <!-- نتیجه ارسال -->
-    <div
-      id="notificationResult"
-      class="alert hidden"
-      role="status"
-    ></div>
+    <!-- لاگ مدیریت -->
+    <section class="panel-card">
+
+      <div class="panel-header">
+
+        <div>
+          <span class="eyebrow">امنیت و سوابق</span>
+          <h2>گزارش فعالیت مدیران</h2>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          id="refreshAuditButton"
+        >
+          بروزرسانی
+        </button>
+
+      </div>
+
+      <div
+        id="auditLogsContainer"
+        class="timeline"
+      >
+        <div class="empty-state">
+          در حال دریافت سوابق فعالیت...
+        </div>
+      </div>
+
+    </section>
 
   </main>
 
@@ -422,4 +521,4 @@
   <script src="/js/admin.js"></script>
 
 </body>
-            </html>
+          </html>
