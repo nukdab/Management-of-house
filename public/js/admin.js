@@ -3,14 +3,15 @@
 const state = {
   admin: null,
   cases: [],
-  selectedCase: null
+  selectedCase: null,
+  selectedFiles: [],
 };
 
 const STATUS_LABELS = {
   new: "جدید",
   under_review: "در حال بررسی",
-  answered: "پاسخ داده شده",
-  closed: "مختومه"
+  answered: "پاسخ داده‌شده",
+  closed: "بسته‌شده",
 };
 
 const CATEGORY_LABELS = {
@@ -20,22 +21,18 @@ const CATEGORY_LABELS = {
   technical: "فنی",
   behavior: "رفتار و نحوه برخورد",
   other: "سایر",
-  "خدمات": "خدمات",
-  "مالی": "مالی",
-  "اداری": "اداری",
-  "فنی": "فنی",
-  "رفتار و نحوه برخورد": "رفتار و نحوه برخورد",
-  "سایر": "سایر"
 };
+
+const MAX_FILE_SIZE = 500 * 1024;
+const MAX_TOTAL_SIZE = 1.5 * 1024 * 1024;
+const MAX_FILES = 5;
 
 const $ = (selector) => document.querySelector(selector);
 
-function normalizePersianDigits(value) {
-  if (value === null || value === undefined) return "";
-
-  return String(value)
-    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
-    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)));
+function normalizeDigits(value) {
+  return String(value ?? "")
+    .replace(/[۰-۹]/g, (char) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(char)))
+    .replace(/[٠-٩]/g, (char) => String("٠١٢٣٤٥٦٧٨٩".indexOf(char)));
 }
 
 function escapeHtml(value) {
@@ -47,45 +44,23 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
-function toPersianDigits(value) {
-  return String(value ?? "").replace(/\d/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[digit]);
+function showMessage(message, type = "info", target = $("#adminMessage")) {
+  if (!target) return;
+
+  target.hidden = false;
+  target.textContent = message;
+  target.className = `form-message ${type}`;
+
+  window.clearTimeout(target._timer);
+
+  target._timer = window.setTimeout(() => {
+    target.hidden = true;
+  }, 6000);
 }
 
-function showAlert(message, type = "error") {
-  const alert = $("#adminAlert");
-
-  if (!alert) return;
-
-  alert.textContent = message;
-  alert.className = `alert alert-${type}`;
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
-}
-
-function hideAlert() {
-  const alert = $("#adminAlert");
-
-  if (!alert) return;
-
-  alert.className = "alert hidden";
-  alert.textContent = "";
-}
-
-function showNotificationResult(message, type = "success") {
-  const box = $("#notificationResult");
-
-  if (!box) return;
-
-  box.textContent = message;
-  box.className = `alert alert-${type}`;
-
-  setTimeout(() => {
-    box.className = "alert hidden";
-    box.textContent = "";
-  }, 5000);
+function hideMessage(target = $("#adminMessage")) {
+  if (!target) return;
+  target.hidden = true;
 }
 
 async function api(url, options = {}) {
@@ -93,8 +68,8 @@ async function api(url, options = {}) {
     credentials: "include",
     ...options,
     headers: {
-      ...(options.headers || {})
-    }
+      ...(options.headers || {}),
+    },
   };
 
   if (
@@ -108,172 +83,242 @@ async function api(url, options = {}) {
 
   const response = await fetch(url, config);
 
-  let data = {};
+  let data = null;
 
   try {
     data = await response.json();
   } catch {
-    data = {};
+    data = null;
   }
 
   if (!response.ok) {
-    throw new Error(
-      data.message ||
-      data.error ||
-      "در ارتباط با سرور مشکلی پیش آمد."
-    );
+    const message =
+      data?.error ||
+      data?.message ||
+      `خطا در ارتباط با سرور (${response.status})`;
+
+    const error = new Error(message);
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
 
   return data;
 }
 
+function formatDate(value) {
+  if (!value) return "—";
+
+  const normalized = String(value).replace(" ", "T");
+  const date = new Date(normalized);
+
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  return new Intl.DateTimeFormat("fa-IR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function statusLabel(status) {
+  return STATUS_LABELS[status] || status || "نامشخص";
+}
+
+function categoryLabel(category) {
+  return CATEGORY_LABELS[category] || category || "—";
+}
+
+function statusClass(status) {
+  switch (status) {
+    case "new":
+      return "status-new";
+
+    case "under_review":
+      return "status-review";
+
+    case "answered":
+      return "status-answered";
+
+    case "closed":
+      return "status-closed";
+
+    default:
+      return "";
+  }
+}
+
+function complainantTypeLabel(type) {
+  return type === "other" ? "برای شخص دیگر" : "برای خودم";
+}
+
+function renderStatus(status) {
+  return `
+    <span class="status-badge ${statusClass(status)}">
+      ${escapeHtml(statusLabel(status))}
+    </span>
+  `;
+}
+
 async function loadAdmin() {
   try {
-    const data = await api("/api/auth/me");
+    const result = await api("/api/auth/me");
 
-    if (!data.user) {
+    if (!result?.authenticated || !result.user) {
       window.location.href = "/auth.html";
       return false;
     }
 
-    if (data.user.role !== "admin") {
+    if (result.user.role !== "admin") {
       window.location.href = "/user.html";
       return false;
     }
 
-    state.admin = data.user;
+    state.admin = result.user;
 
     const welcome = $("#adminWelcome");
 
     if (welcome) {
       welcome.textContent =
-        `مدیر محترم، ${data.user.full_name || "کاربر مدیر"} خوش آمدید.`;
+        `خوش آمدید ${result.user.full_name || ""} — مدیریت پرونده‌ها، پیوست‌ها و ابلاغیه‌ها`;
     }
 
     return true;
   } catch (error) {
+    console.error(error);
     window.location.href = "/auth.html";
     return false;
   }
 }
 
-function getCaseUserName(caseItem) {
-  return (
-    caseItem.user_full_name ||
-    caseItem.full_name ||
-    caseItem.user_name ||
-    caseItem.created_by_name ||
-    "—"
-  );
-}
+async function loadCases() {
+  const loading = $("#casesLoading");
+  const empty = $("#casesEmpty");
+  const wrapper = $("#casesTableWrapper");
+  const tbody = $("#casesTableBody");
 
-function getCaseUserPhone(caseItem) {
-  return (
-    caseItem.user_phone ||
-    caseItem.phone ||
-    caseItem.created_by_phone ||
-    "—"
-  );
-}
+  if (!loading || !empty || !wrapper || !tbody) return;
 
-function getCategoryLabel(category) {
-  return CATEGORY_LABELS[category] || category || "—";
-}
-
-function getStatusLabel(status) {
-  return STATUS_LABELS[status] || status || "—";
-}
-
-function statusBadge(status) {
-  const label = getStatusLabel(status);
-
-  return `
-    <span class="status-badge status-${escapeHtml(status || "new")}">
-      ${escapeHtml(label)}
-    </span>
-  `;
-}
-
-function formatDate(value) {
-  if (!value) return "—";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return escapeHtml(value);
-  }
+  loading.hidden = false;
+  empty.hidden = true;
+  wrapper.hidden = true;
 
   try {
-    return new Intl.DateTimeFormat("fa-IR", {
-      dateStyle: "short",
-      timeStyle: "short"
-    }).format(date);
-  } catch {
-    return date.toLocaleString("fa-IR");
-  }
-}
+    const result = await api("/api/admin/cases");
 
-function calculateStats(cases) {
-  const total = cases.length;
+    state.cases = Array.isArray(result?.cases)
+      ? result.cases
+      : [];
 
-  let newCount = 0;
-  let reviewCount = 0;
-  let answeredCount = 0;
-  let closedCount = 0;
+    renderCases();
+    updateStats();
+  } catch (error) {
+    console.error(error);
 
-  for (const item of cases) {
-    switch (item.status) {
-      case "new":
-        newCount++;
-        break;
+    loading.hidden = true;
+    empty.hidden = false;
+    empty.textContent =
+      error.message || "دریافت پرونده‌ها با خطا مواجه شد.";
 
-      case "under_review":
-        reviewCount++;
-        break;
+    showMessage(
+      error.message || "دریافت پرونده‌ها با خطا مواجه شد.",
+      "error"
+    );
 
-      case "answered":
-        answeredCount++;
-        break;
-
-      case "closed":
-        closedCount++;
-        break;
-    }
-  }
-
-  $("#totalCases").textContent = toPersianDigits(total);
-  $("#newCases").textContent = toPersianDigits(newCount);
-  $("#reviewCases").textContent = toPersianDigits(reviewCount);
-  $("#answeredCases").textContent = toPersianDigits(answeredCount);
-  $("#closedCases").textContent = toPersianDigits(closedCount);
-}
-
-function renderCases(cases) {
-  const tbody = $("#casesTableBody");
-  const tableWrapper = $("#casesTableWrapper");
-  const empty = $("#casesEmpty");
-
-  if (!tbody || !tableWrapper || !empty) return;
-
-  tbody.innerHTML = "";
-
-  if (!cases.length) {
-    tableWrapper.classList.add("hidden");
-    empty.classList.remove("hidden");
     return;
   }
 
-  tableWrapper.classList.remove("hidden");
-  empty.classList.add("hidden");
+  loading.hidden = true;
+}
 
-  for (const item of cases) {
+function getFilteredCases() {
+  const searchInput = $("#caseSearch");
+  const statusInput = $("#statusFilter");
+
+  const search = normalizeDigits(
+    searchInput?.value || ""
+  )
+    .trim()
+    .toLowerCase();
+
+  const status = statusInput?.value || "";
+
+  return state.cases.filter((item) => {
+    if (status && item.status !== status) {
+      return false;
+    }
+
+    if (!search) {
+      return true;
+    }
+
+    const searchable = [
+      item.tracking_code,
+      item.owner_name,
+      item.full_name,
+      item.owner_phone,
+      item.phone,
+      item.subject,
+      item.category,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return normalizeDigits(searchable).includes(search);
+  });
+}
+
+function renderCases() {
+  const empty = $("#casesEmpty");
+  const wrapper = $("#casesTableWrapper");
+  const tbody = $("#casesTableBody");
+
+  if (!empty || !wrapper || !tbody) return;
+
+  const filtered = getFilteredCases();
+
+  tbody.innerHTML = "";
+
+  if (!filtered.length) {
+    wrapper.hidden = true;
+    empty.hidden = false;
+    empty.textContent = "پرونده‌ای مطابق جستجو پیدا نشد.";
+    return;
+  }
+
+  empty.hidden = true;
+  wrapper.hidden = false;
+
+  for (const item of filtered) {
     const row = document.createElement("tr");
 
     row.innerHTML = `
       <td>
-        <strong class="tracking-code">
-          ${escapeHtml(item.tracking_code || "—")}
-        </strong>
+        <strong>${escapeHtml(item.tracking_code || "—")}</strong>
+      </td>
+
+      <td>
+        ${escapeHtml(
+          item.owner_name ||
+          item.full_name ||
+          "—"
+        )}
+
+        ${
+          item.owner_phone || item.phone
+            ? `
+              <div class="table-subtext">
+                ${escapeHtml(
+                  item.owner_phone ||
+                  item.phone ||
+                  ""
+                )}
+              </div>
+            `
+            : ""
+        }
       </td>
 
       <td>
@@ -281,25 +326,21 @@ function renderCases(cases) {
       </td>
 
       <td>
-        ${escapeHtml(getCategoryLabel(item.category))}
+        ${escapeHtml(categoryLabel(item.category))}
       </td>
 
       <td>
-        ${escapeHtml(getCaseUserName(item))}
+        ${renderStatus(item.status)}
       </td>
 
       <td>
-        ${statusBadge(item.status)}
-      </td>
-
-      <td>
-        ${formatDate(item.created_at)}
+        ${escapeHtml(formatDate(item.created_at))}
       </td>
 
       <td>
         <button
           type="button"
-          class="btn btn-secondary btn-small view-case-button"
+          class="btn btn-small btn-primary"
           data-case-id="${escapeHtml(item.id)}"
         >
           مشاهده
@@ -307,217 +348,321 @@ function renderCases(cases) {
       </td>
     `;
 
+    const button = row.querySelector("[data-case-id]");
+
+    button?.addEventListener("click", () => {
+      openCase(item.id);
+    });
+
     tbody.appendChild(row);
   }
-
-  document.querySelectorAll(".view-case-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      const id = Number(button.dataset.caseId);
-
-      if (Number.isFinite(id)) {
-        openCase(id);
-      }
-    });
-  });
 }
 
-async function loadCases(search = "", status = "") {
-  const loading = $("#casesLoading");
+function updateStats() {
+  const total = state.cases.length;
 
-  if (loading) {
-    loading.classList.remove("hidden");
-  }
+  const newCount = state.cases.filter(
+    (item) => item.status === "new"
+  ).length;
 
-  try {
-    const params = new URLSearchParams();
+  const reviewCount = state.cases.filter(
+    (item) => item.status === "under_review"
+  ).length;
 
-    if (search) {
-      params.set("search", normalizePersianDigits(search).trim());
-    }
+  const answeredCount = state.cases.filter(
+    (item) => item.status === "answered"
+  ).length;
 
-    if (status) {
-      params.set("status", status);
-    }
+  const closedCount = state.cases.filter(
+    (item) => item.status === "closed"
+  ).length;
 
-    const query = params.toString();
+  setText("#totalCases", toPersianDigits(total));
+  setText("#newCases", toPersianDigits(newCount));
+  setText("#reviewCases", toPersianDigits(reviewCount));
+  setText("#answeredCases", toPersianDigits(answeredCount));
+  setText("#closedCases", toPersianDigits(closedCount));
+}
 
-    const data = await api(
-      `/api/admin/cases${query ? `?${query}` : ""}`
-    );
+function toPersianDigits(value) {
+  return String(value ?? "").replace(
+    /\d/g,
+    (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]
+  );
+}
 
-    state.cases = Array.isArray(data.cases)
-      ? data.cases
-      : Array.isArray(data)
-        ? data
-        : [];
+function setText(selector, value) {
+  const element = $(selector);
 
-    calculateStats(state.cases);
-    renderCases(state.cases);
-  } catch (error) {
-    showAlert(error.message);
-  } finally {
-    if (loading) {
-      loading.classList.add("hidden");
-    }
+  if (element) {
+    element.textContent = value;
   }
 }
 
 async function openCase(caseId) {
-  hideAlert();
+  const section = $("#caseDetailsSection");
 
-  const panel = $("#caseDetailsPanel");
+  if (!section) return;
 
-  if (!panel) return;
+  section.hidden = false;
+
+  section.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+
+  showCaseLoading();
 
   try {
-    panel.classList.remove("hidden");
+    const result = await api(
+      `/api/cases/${encodeURIComponent(caseId)}`
+    );
 
-    const data = await api(`/api/cases/${caseId}`);
+    state.selectedCase = result?.case || result;
 
-    const caseItem = data.case || data;
+    renderCaseDetails(state.selectedCase);
 
-    state.selectedCase = caseItem;
-
-    renderCaseDetails(caseItem, data);
-    window.scrollTo({
-      top: panel.offsetTop - 20,
-      behavior: "smooth"
-    });
+    await Promise.all([
+      loadCaseEvents(caseId),
+    ]);
   } catch (error) {
-    panel.classList.add("hidden");
-    showAlert(error.message);
+    console.error(error);
+
+    showMessage(
+      error.message || "دریافت جزئیات پرونده ناموفق بود.",
+      "error",
+      $("#caseDetailsMessage")
+    );
   }
 }
 
-function renderCaseDetails(caseItem, data) {
-  const trackingCode = caseItem.tracking_code || "—";
+function showCaseLoading() {
+  setText("#detailTrackingCode", "در حال دریافت...");
+  setText("#detailStatus", "در حال دریافت...");
+  setText("#detailCategory", "در حال دریافت...");
+  setText("#detailCreatedAt", "در حال دریافت...");
+  setText("#detailOwnerName", "در حال دریافت...");
+  setText("#detailOwnerPhone", "در حال دریافت...");
+  setText("#detailComplainantType", "در حال دریافت...");
+  setText("#detailSubject", "در حال دریافت...");
+  setText("#detailDescription", "در حال دریافت...");
 
-  $("#detailSubject").textContent =
-    caseItem.subject || "بدون عنوان";
+  const signatureImage = $("#signatureImage");
+  const signatureEmpty = $("#signatureEmpty");
 
-  $("#detailTrackingCode").textContent =
-    `کد پیگیری: ${trackingCode}`;
+  if (signatureImage) {
+    signatureImage.hidden = true;
+    signatureImage.removeAttribute("src");
+  }
 
-  $("#detailCode").textContent = trackingCode;
+  if (signatureEmpty) {
+    signatureEmpty.hidden = false;
+    signatureEmpty.textContent = "در حال دریافت امضا...";
+  }
+}
 
-  $("#detailStatus").innerHTML =
-    statusBadge(caseItem.status);
+function renderCaseDetails(caseData) {
+  if (!caseData) return;
 
-  $("#detailCategory").textContent =
-    getCategoryLabel(caseItem.category);
+  setText(
+    "#detailTrackingCode",
+    caseData.tracking_code || "—"
+  );
 
-  $("#detailCreatedAt").textContent =
-    formatDate(caseItem.created_at);
+  const statusElement = $("#detailStatus");
 
-  $("#detailUserName").textContent =
-    getCaseUserName(caseItem);
+  if (statusElement) {
+    statusElement.innerHTML = renderStatus(caseData.status);
+  }
 
-  $("#detailUserPhone").textContent =
-    getCaseUserPhone(caseItem);
+  setText(
+    "#detailCategory",
+    categoryLabel(caseData.category)
+  );
 
-  $("#detailDescription").textContent =
-    caseItem.description || "شرحی ثبت نشده است.";
+  setText(
+    "#detailCreatedAt",
+    formatDate(caseData.created_at)
+  );
+
+  setText(
+    "#detailOwnerName",
+    caseData.owner_name ||
+    caseData.full_name ||
+    "—"
+  );
+
+  setText(
+    "#detailOwnerPhone",
+    caseData.owner_phone ||
+    caseData.phone ||
+    "—"
+  );
+
+  setText(
+    "#detailComplainantType",
+    complainantTypeLabel(
+      caseData.complainant_type
+    )
+  );
+
+  setText(
+    "#detailSubject",
+    caseData.subject || "—"
+  );
+
+  setText(
+    "#detailDescription",
+    caseData.description || "—"
+  );
 
   const otherSection = $("#otherPersonSection");
 
-  if (caseItem.complainant_type === "other") {
-    otherSection.classList.remove("hidden");
+  if (
+    otherSection &&
+    caseData.complainant_type === "other"
+  ) {
+    otherSection.hidden = false;
 
-    $("#detailOtherName").textContent =
-      caseItem.other_full_name || "—";
+    setText(
+      "#detailOtherName",
+      caseData.other_full_name || "—"
+    );
 
-    $("#detailOtherPhone").textContent =
-      caseItem.other_phone || "—";
+    setText(
+      "#detailOtherPhone",
+      caseData.other_phone || "—"
+    );
 
-    $("#detailOtherNationalId").textContent =
-      caseItem.other_national_id || "—";
-  } else {
-    otherSection.classList.add("hidden");
+    setText(
+      "#detailOtherNationalId",
+      caseData.other_national_id || "—"
+    );
+  } else if (otherSection) {
+    otherSection.hidden = true;
   }
 
-  renderSignature(caseItem.signature_data);
-  renderAttachments(data.attachments || []);
-  renderTimeline(data.events || []);
+  const statusSelect = $("#caseStatusSelect");
 
-  $("#statusCaseId").value = caseItem.id;
-  $("#caseStatus").value = caseItem.status || "new";
-  $("#statusDescription").value = "";
+  if (statusSelect) {
+    statusSelect.value =
+      caseData.status || "new";
+  }
 
-  $("#notificationCaseId").value = caseItem.id;
-  $("#notificationTitle").value = "";
-  $("#notificationMessage").value = "";
+  const statusNote = $("#statusNote");
+
+  if (statusNote) {
+    statusNote.value = "";
+  }
+
+  renderSignature(caseData.signature_data);
+  renderAttachments(caseData.attachments || []);
 }
 
 function renderSignature(signatureData) {
-  const image = $("#detailSignature");
-  const message = $("#noSignatureMessage");
+  const image = $("#signatureImage");
+  const empty = $("#signatureEmpty");
 
-  if (!image || !message) return;
+  if (!image || !empty) return;
 
   if (
     typeof signatureData === "string" &&
     signatureData.startsWith("data:image/")
   ) {
     image.src = signatureData;
-    image.classList.remove("hidden");
-    message.classList.add("hidden");
-  } else {
-    image.removeAttribute("src");
-    image.classList.add("hidden");
-    message.classList.remove("hidden");
+    image.hidden = false;
+    empty.hidden = true;
+    return;
   }
+
+  image.hidden = true;
+  image.removeAttribute("src");
+  empty.hidden = false;
+  empty.textContent =
+    "برای این پرونده امضایی ثبت نشده است.";
 }
 
 function renderAttachments(attachments) {
-  const container = $("#detailAttachments");
+  const container = $("#attachmentsContainer");
 
   if (!container) return;
 
   container.innerHTML = "";
 
-  if (!attachments.length) {
+  if (!Array.isArray(attachments) || !attachments.length) {
     container.innerHTML = `
-      <p class="muted-text">
-        پیوستی برای این پرونده ثبت نشده است.
-      </p>
+      <div class="empty-state">
+        هنوز پیوستی برای این پرونده ثبت نشده است.
+      </div>
     `;
 
     return;
   }
+
+  const list = document.createElement("div");
+  list.className = "attachment-list";
 
   for (const attachment of attachments) {
     const item = document.createElement("div");
 
     item.className = "attachment-item";
 
-    const name = attachment.file_name || "فایل پیوست";
-    const size = formatFileSize(attachment.file_size);
+    const size =
+      Number(attachment.file_size || 0);
 
     item.innerHTML = `
-      <div>
-        <strong>${escapeHtml(name)}</strong>
-        <small>${escapeHtml(size)}</small>
+      <div class="attachment-info">
+
+        <strong>
+          ${escapeHtml(
+            attachment.file_name || "فایل"
+          )}
+        </strong>
+
+        <small>
+          ${escapeHtml(
+            attachment.content_type ||
+            "نوع فایل نامشخص"
+          )}
+
+          ${size ? ` — ${formatFileSize(size)}` : ""}
+
+          ${
+            attachment.created_at
+              ? ` — ${escapeHtml(
+                  formatDate(
+                    attachment.created_at
+                  )
+                )}`
+              : ""
+          }
+        </small>
+
       </div>
 
       <a
-        href="/api/attachments/${encodeURIComponent(attachment.id)}"
+        class="btn btn-small btn-secondary"
+        href="/api/attachments/${encodeURIComponent(
+          attachment.id
+        )}"
         target="_blank"
-        rel="noopener noreferrer"
-        class="btn btn-secondary btn-small"
+        rel="noopener"
       >
-        مشاهده
+        مشاهده / دریافت
       </a>
     `;
 
-    container.appendChild(item);
+    list.appendChild(item);
   }
+
+  container.appendChild(list);
 }
 
 function formatFileSize(bytes) {
   const value = Number(bytes);
 
   if (!Number.isFinite(value) || value <= 0) {
-    return "حجم نامشخص";
+    return "۰ بایت";
   }
 
   if (value < 1024) {
@@ -530,21 +675,56 @@ function formatFileSize(bytes) {
     )} کیلوبایت`;
   }
 
-  return `${(value / (1024 * 1024)).toFixed(1)} مگابایت`;
+  return `${(
+    value /
+    (1024 * 1024)
+  ).toFixed(2)} مگابایت`;
 }
 
-function renderTimeline(events) {
-  const timeline = $("#caseTimeline");
+async function loadCaseEvents(caseId) {
+  const container = $("#caseEventsContainer");
 
-  if (!timeline) return;
+  if (!container) return;
 
-  timeline.innerHTML = "";
+  container.innerHTML = `
+    <div class="empty-state">
+      در حال دریافت سوابق رسیدگی...
+    </div>
+  `;
+
+  try {
+    const result = await api(
+      `/api/cases/${encodeURIComponent(caseId)}/events`
+    );
+
+    const events = Array.isArray(result?.events)
+      ? result.events
+      : [];
+
+    renderCaseEvents(events);
+  } catch (error) {
+    console.error(error);
+
+    container.innerHTML = `
+      <div class="empty-state">
+        دریافت سوابق با خطا مواجه شد.
+      </div>
+    `;
+  }
+}
+
+function renderCaseEvents(events) {
+  const container = $("#caseEventsContainer");
+
+  if (!container) return;
+
+  container.innerHTML = "";
 
   if (!events.length) {
-    timeline.innerHTML = `
-      <p class="muted-text">
-        رویدادی برای این پرونده ثبت نشده است.
-      </p>
+    container.innerHTML = `
+      <div class="empty-state">
+        هنوز رویدادی برای این پرونده ثبت نشده است.
+      </div>
     `;
 
     return;
@@ -559,233 +739,632 @@ function renderTimeline(events) {
       <div class="timeline-dot"></div>
 
       <div class="timeline-content">
+
         <strong>
-          ${escapeHtml(event.event_type || "رویداد")}
+          ${escapeHtml(
+            event.event_type ||
+            "رویداد پرونده"
+          )}
         </strong>
 
         <p>
-          ${escapeHtml(event.description || "بدون توضیح")}
+          ${escapeHtml(
+            event.description ||
+            "بدون توضیح"
+          )}
         </p>
 
         <small>
-          ${formatDate(event.created_at)}
+          ${escapeHtml(
+            formatDate(event.created_at)
+          )}
         </small>
+
       </div>
     `;
 
-    timeline.appendChild(item);
+    container.appendChild(item);
   }
 }
 
-async function updateCaseStatus(event) {
-  event.preventDefault();
-
-  const caseId = Number($("#statusCaseId").value);
-  const status = $("#caseStatus").value;
-  const description = $("#statusDescription").value.trim();
-
-  if (!caseId) {
-    showAlert("پرونده‌ای انتخاب نشده است.");
+async function updateCaseStatus() {
+  if (!state.selectedCase?.id) {
+    showMessage(
+      "ابتدا یک پرونده را انتخاب کنید.",
+      "error",
+      $("#caseDetailsMessage")
+    );
     return;
   }
 
-  const button = event.submitter;
+  const button = $("#updateStatusButton");
+  const select = $("#caseStatusSelect");
+  const note = $("#statusNote");
+
+  const status = select?.value || "";
+  const description =
+    note?.value.trim() || "";
+
+  if (!status) {
+    showMessage(
+      "وضعیت جدید را انتخاب کنید.",
+      "error",
+      $("#caseDetailsMessage")
+    );
+    return;
+  }
 
   if (button) {
     button.disabled = true;
-    button.dataset.originalText = button.textContent;
     button.textContent = "در حال ذخیره...";
   }
 
   try {
-    await api(`/api/cases/${caseId}`, {
-      method: "PATCH",
-      body: {
-        status,
-        description
+    const result = await api(
+      `/api/cases/${encodeURIComponent(
+        state.selectedCase.id
+      )}`,
+      {
+        method: "PATCH",
+        body: {
+          status,
+          event_description:
+            description ||
+            `وضعیت پرونده به «${statusLabel(
+              status
+            )}» تغییر کرد.`,
+        },
       }
-    });
-
-    showAlert("وضعیت پرونده با موفقیت تغییر کرد.", "success");
-
-    await loadCases(
-      $("#searchInput").value.trim(),
-      $("#statusFilter").value
     );
 
-    await openCase(caseId);
+    state.selectedCase =
+      result?.case ||
+      {
+        ...state.selectedCase,
+        status,
+      };
+
+    renderCaseDetails(state.selectedCase);
+
+    await loadCases();
+
+    await loadCaseEvents(
+      state.selectedCase.id
+    );
+
+    showMessage(
+      "وضعیت پرونده با موفقیت تغییر کرد.",
+      "success",
+      $("#caseDetailsMessage")
+    );
   } catch (error) {
-    showAlert(error.message);
+    console.error(error);
+
+    showMessage(
+      error.message ||
+        "تغییر وضعیت انجام نشد.",
+      "error",
+      $("#caseDetailsMessage")
+    );
   } finally {
     if (button) {
       button.disabled = false;
-      button.textContent =
-        button.dataset.originalText || "ذخیره وضعیت";
+      button.textContent = "ذخیره وضعیت";
     }
   }
 }
 
-async function sendNotification(event) {
-  event.preventDefault();
+function handleAttachmentSelection(event) {
+  const files = Array.from(
+    event.target.files || []
+  );
 
-  const caseId = Number($("#notificationCaseId").value);
-  const title = $("#notificationTitle").value.trim();
-  const message = $("#notificationMessage").value.trim();
+  const list = $("#adminAttachmentList");
 
-  if (!caseId) {
-    showNotificationResult(
+  if (!list) return;
+
+  state.selectedFiles = [];
+
+  if (files.length > MAX_FILES) {
+    showMessage(
+      `حداکثر ${MAX_FILES} فایل می‌توانید انتخاب کنید.`,
+      "error",
+      $("#caseDetailsMessage")
+    );
+
+    event.target.value = "";
+    renderSelectedFiles();
+    return;
+  }
+
+  let total = 0;
+
+  for (const file of files) {
+    if (file.size > MAX_FILE_SIZE) {
+      showMessage(
+        `فایل «${file.name}» بیشتر از ۵۰۰ کیلوبایت است.`,
+        "error",
+        $("#caseDetailsMessage")
+      );
+
+      event.target.value = "";
+      state.selectedFiles = [];
+      renderSelectedFiles();
+      return;
+    }
+
+    total += file.size;
+  }
+
+  if (total > MAX_TOTAL_SIZE) {
+    showMessage(
+      "مجموع حجم فایل‌ها نمی‌تواند بیشتر از ۱.۵ مگابایت باشد.",
+      "error",
+      $("#caseDetailsMessage")
+    );
+
+    event.target.value = "";
+    state.selectedFiles = [];
+    renderSelectedFiles();
+    return;
+  }
+
+  state.selectedFiles = files;
+  renderSelectedFiles();
+}
+
+function renderSelectedFiles() {
+  const container = $("#adminAttachmentList");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (!state.selectedFiles.length) {
+    return;
+  }
+
+  for (const file of state.selectedFiles) {
+    const item = document.createElement("div");
+
+    item.className = "attachment-item";
+
+    item.innerHTML = `
+      <div class="attachment-info">
+
+        <strong>
+          ${escapeHtml(file.name)}
+        </strong>
+
+        <small>
+          ${escapeHtml(
+            file.type ||
+            "نوع فایل نامشخص"
+          )}
+
+          — ${formatFileSize(file.size)}
+        </small>
+
+      </div>
+    `;
+
+    container.appendChild(item);
+  }
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      resolve(reader.result);
+    };
+
+    reader.onerror = () => {
+      reject(
+        new Error(
+          `خواندن فایل «${file.name}» ناموفق بود.`
+        )
+      );
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadAttachments() {
+  if (!state.selectedCase?.id) {
+    showMessage(
       "ابتدا یک پرونده را انتخاب کنید.",
-      "error"
+      "error",
+      $("#caseDetailsMessage")
     );
-
     return;
   }
 
-  if (!title || !message) {
-    showNotificationResult(
-      "عنوان و متن ابلاغیه را کامل کنید.",
-      "error"
+  if (!state.selectedFiles.length) {
+    showMessage(
+      "حداقل یک فایل انتخاب کنید.",
+      "error",
+      $("#caseDetailsMessage")
     );
-
     return;
   }
 
-  const button = event.submitter;
+  const button = $("#uploadAttachmentsButton");
 
   if (button) {
     button.disabled = true;
-    button.dataset.originalText = button.textContent;
+    button.textContent = "در حال بارگذاری...";
+  }
+
+  try {
+    const attachments = [];
+
+    for (const file of state.selectedFiles) {
+      const dataUrl = await fileToDataUrl(file);
+
+      attachments.push({
+        file_name: file.name,
+        content_type:
+          file.type ||
+          "application/octet-stream",
+        file_size: file.size,
+        file_data: dataUrl,
+      });
+    }
+
+    const result = await api(
+      "/api/admin/attachments",
+      {
+        method: "POST",
+        body: {
+          case_id: state.selectedCase.id,
+          attachments,
+        },
+      }
+    );
+
+    if (Array.isArray(result?.attachments)) {
+      renderAttachments(
+        result.attachments
+      );
+    }
+
+    state.selectedFiles = [];
+
+    const input =
+      $("#adminAttachmentInput");
+
+    if (input) {
+      input.value = "";
+    }
+
+    renderSelectedFiles();
+
+    const refreshed = await api(
+      `/api/cases/${encodeURIComponent(
+        state.selectedCase.id
+      )}`
+    );
+
+    state.selectedCase =
+      refreshed?.case ||
+      state.selectedCase;
+
+    renderCaseDetails(
+      state.selectedCase
+    );
+
+    await loadCaseEvents(
+      state.selectedCase.id
+    );
+
+    showMessage(
+      "پیوست‌ها با موفقیت به پرونده اضافه شدند.",
+      "success",
+      $("#caseDetailsMessage")
+    );
+  } catch (error) {
+    console.error(error);
+
+    showMessage(
+      error.message ||
+        "افزودن پیوست انجام نشد.",
+      "error",
+      $("#caseDetailsMessage")
+    );
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent =
+        "افزودن پیوست به پرونده";
+    }
+  }
+}
+
+async function sendNotification() {
+  if (!state.selectedCase?.id) {
+    showMessage(
+      "ابتدا یک پرونده را انتخاب کنید.",
+      "error",
+      $("#caseDetailsMessage")
+    );
+    return;
+  }
+
+  const title =
+    $("#notificationTitle")?.value.trim() || "";
+
+  const message =
+    $("#notificationMessage")?.value.trim() || "";
+
+  if (!title) {
+    showMessage(
+      "عنوان ابلاغیه را وارد کنید.",
+      "error",
+      $("#caseDetailsMessage")
+    );
+    return;
+  }
+
+  if (!message) {
+    showMessage(
+      "متن ابلاغیه را وارد کنید.",
+      "error",
+      $("#caseDetailsMessage")
+    );
+    return;
+  }
+
+  const button =
+    $("#sendNotificationButton");
+
+  if (button) {
+    button.disabled = true;
     button.textContent = "در حال ارسال...";
   }
 
   try {
-    const caseItem = state.selectedCase;
-
-    if (!caseItem) {
-      throw new Error("پرونده انتخاب‌شده پیدا نشد.");
-    }
-
-    const userId = Number(
-      caseItem.user_id ||
-      caseItem.userId
+    await api(
+      "/api/admin/notifications",
+      {
+        method: "POST",
+        body: {
+          case_id: state.selectedCase.id,
+          title,
+          message,
+        },
+      }
     );
 
-    if (!userId) {
-      throw new Error(
-        "شناسه کاربر این پرونده در اطلاعات پرونده موجود نیست."
-      );
+    if ($("#notificationTitle")) {
+      $("#notificationTitle").value = "";
     }
 
-    await api("/api/admin/notifications", {
-      method: "POST",
-      body: {
-        user_id: userId,
-        case_id: caseId,
-        title,
-        message
-      }
-    });
+    if ($("#notificationMessage")) {
+      $("#notificationMessage").value = "";
+    }
 
-    $("#notificationTitle").value = "";
-    $("#notificationMessage").value = "";
+    await loadCaseEvents(
+      state.selectedCase.id
+    );
 
-    showNotificationResult(
-      "ابلاغیه با موفقیت ارسال شد.",
-      "success"
+    showMessage(
+      "ابلاغیه با موفقیت ثبت و ارسال شد.",
+      "success",
+      $("#caseDetailsMessage")
     );
   } catch (error) {
-    showNotificationResult(error.message, "error");
+    console.error(error);
+
+    showMessage(
+      error.message ||
+        "ارسال ابلاغیه انجام نشد.",
+      "error",
+      $("#caseDetailsMessage")
+    );
   } finally {
     if (button) {
       button.disabled = false;
       button.textContent =
-        button.dataset.originalText || "ارسال ابلاغیه";
+        "ارسال ابلاغیه";
     }
   }
 }
 
-async function logout() {
+function closeCaseDetails() {
+  const section =
+    $("#caseDetailsSection");
+
+  if (section) {
+    section.hidden = true;
+  }
+
+  state.selectedCase = null;
+  state.selectedFiles = [];
+}
+
+async function loadAuditLogs() {
+  const container =
+    $("#auditLogsContainer");
+
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="empty-state">
+      در حال دریافت سوابق فعالیت...
+    </div>
+  `;
+
   try {
-    await api("/api/auth/logout", {
-      method: "POST"
-    });
-  } catch {
-    // حتی اگر درخواست خروج با خطا مواجه شد،
-    // کاربر را به صفحه ورود می‌بریم.
-  }
-
-  window.location.href = "/auth.html";
-}
-
-function setupSearch() {
-  const form = $("#searchForm");
-
-  if (!form) return;
-
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const search = normalizePersianDigits(
-      $("#searchInput").value
-    ).trim();
-
-    const status = $("#statusFilter").value;
-
-    await loadCases(search, status);
-  });
-
-  $("#clearSearchButton").addEventListener("click", async () => {
-    $("#searchInput").value = "";
-    $("#statusFilter").value = "";
-
-    await loadCases();
-  });
-}
-
-function setupDetails() {
-  const closeButton = $("#closeDetailsButton");
-
-  if (closeButton) {
-    closeButton.addEventListener("click", () => {
-      $("#caseDetailsPanel").classList.add("hidden");
-      state.selectedCase = null;
-    });
-  }
-
-  const statusForm = $("#statusForm");
-
-  if (statusForm) {
-    statusForm.addEventListener("submit", updateCaseStatus);
-  }
-
-  const notificationForm = $("#notificationForm");
-
-  if (notificationForm) {
-    notificationForm.addEventListener(
-      "submit",
-      sendNotification
+    const result = await api(
+      "/api/admin/audit-logs"
     );
+
+    const logs = Array.isArray(result?.logs)
+      ? result.logs
+      : [];
+
+    renderAuditLogs(logs);
+  } catch (error) {
+    console.error(error);
+
+    container.innerHTML = `
+      <div class="empty-state">
+        دریافت سوابق فعالیت ناموفق بود.
+      </div>
+    `;
   }
 }
 
-function setupLogout() {
-  const button = $("#logoutButton");
+function renderAuditLogs(logs) {
+  const container =
+    $("#auditLogsContainer");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (!logs.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        هنوز فعالیت مدیریتی ثبت نشده است.
+      </div>
+    `;
+
+    return;
+  }
+
+  for (const log of logs) {
+    const item = document.createElement("div");
+
+    item.className = "timeline-item";
+
+    item.innerHTML = `
+      <div class="timeline-dot"></div>
+
+      <div class="timeline-content">
+
+        <strong>
+          ${escapeHtml(
+            log.action ||
+            "فعالیت مدیریتی"
+          )}
+        </strong>
+
+        <p>
+          ${escapeHtml(
+            log.details ||
+            "بدون توضیح"
+          )}
+        </p>
+
+        <small>
+          ${escapeHtml(
+            formatDate(log.created_at)
+          )}
+        </small>
+
+      </div>
+    `;
+
+    container.appendChild(item);
+  }
+}
+
+async function logout() {
+  const button =
+    $("#logoutButton");
 
   if (button) {
-    button.addEventListener("click", logout);
+    button.disabled = true;
+    button.textContent = "در حال خروج...";
+  }
+
+  try {
+    await api(
+      "/api/auth/logout",
+      {
+        method: "POST",
+      }
+    );
+  } catch (error) {
+    console.error(error);
+  } finally {
+    window.location.href = "/auth.html";
   }
 }
 
-async function init() {
-  const isAdmin = await loadAdmin();
+function bindEvents() {
+  $("#logoutButton")?.addEventListener(
+    "click",
+    logout
+  );
 
-  if (!isAdmin) return;
+  $("#refreshCasesButton")?.addEventListener(
+    "click",
+    loadCases
+  );
 
-  setupSearch();
-  setupDetails();
-  setupLogout();
+  $("#refreshAuditButton")?.addEventListener(
+    "click",
+    loadAuditLogs
+  );
 
-  await loadCases();
+  $("#caseSearch")?.addEventListener(
+    "input",
+    renderCases
+  );
+
+  $("#statusFilter")?.addEventListener(
+    "change",
+    renderCases
+  );
+
+  $("#closeCaseDetailsButton")?.addEventListener(
+    "click",
+    closeCaseDetails
+  );
+
+  $("#updateStatusButton")?.addEventListener(
+    "click",
+    updateCaseStatus
+  );
+
+  $("#adminAttachmentInput")?.addEventListener(
+    "change",
+    handleAttachmentSelection
+  );
+
+  $("#uploadAttachmentsButton")?.addEventListener(
+    "click",
+    uploadAttachments
+  );
+
+  $("#sendNotificationButton")?.addEventListener(
+    "click",
+    sendNotification
+  );
 }
 
-document.addEventListener("DOMContentLoaded", init);
+async function initAdminPanel() {
+  bindEvents();
+
+  const authenticated =
+    await loadAdmin();
+
+  if (!authenticated) {
+    return;
+  }
+
+  await Promise.all([
+    loadCases(),
+    loadAuditLogs(),
+  ]);
+}
+
+document.addEventListener(
+  "DOMContentLoaded",
+  initAdminPanel
+);
