@@ -1,838 +1,260 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
-
 <head>
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>سامانه ثبت و پیگیری شکایات</title>
-
-  <meta
-    name="description"
-    content="سامانه ثبت، مدیریت و پیگیری آنلاین شکایات"
-  >
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  >
-
-  <link rel="stylesheet" href="css/style.css">
-
+  <meta name="description" content="ورود و ثبت‌نام در سامانه مدیریت شکایات">
+  <title>ورود | سامانه مدیریت شکایات</title>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 
+<body class="auth-page">
 
-<body>
-
-  <!-- Background Aurora -->
-
-  <div class="aurora aurora-one"></div>
-  <div class="aurora aurora-two"></div>
-  <div class="aurora aurora-three"></div>
-
-
-  <!-- Header -->
-
-  <header class="navbar glass">
-
-    <a href="#home" class="brand">
-
-      <span class="brand-icon">◈</span>
-
-      <span>
-        سامانه شکایات
-      </span>
-
-    </a>
-
-
-    <nav class="navigation">
-
-      <a href="#home">
-        خانه
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="brand">
+        <span class="brand-icon">⚖</span>
+        <span>سامانه مدیریت شکایات</span>
       </a>
 
-      <a href="#features">
-        امکانات
-      </a>
+      <div class="header-actions">
+        <button
+          id="themeToggle"
+          class="icon-btn"
+          type="button"
+          aria-label="تغییر پوسته"
+        >
+          ☀️
+        </button>
 
-      <a href="#security">
-        امنیت
-      </a>
-
-      <a href="#about">
-        درباره سامانه
-      </a>
-
-    </nav>
-
-
-    <div class="navbar-actions">
-
-      <button
-        id="themeToggle"
-        class="theme-toggle"
-        type="button"
-        aria-label="تغییر حالت نمایش"
-      >
-        ☀️
-      </button>
-
-
-      <a
-        href="auth.html"
-        class="btn btn-primary header-login"
-      >
-        ورود به پنل
-      </a>
-
+        <a href="/" class="btn btn-secondary">
+          صفحه اصلی
+        </a>
+      </div>
     </div>
-
   </header>
 
-
-
-  <main>
-
-
-    <!-- =========================
-         HERO
-    ========================== -->
-
-    <section
-      id="home"
-      class="hero section"
-    >
-
-      <div class="hero-content reveal">
-
-
-        <div class="eyebrow">
-
-          <span class="eyebrow-dot"></span>
-
-          سامانه مدیریت و پیگیری پرونده‌ها
-
-        </div>
-
-
-        <h1>
-
-          صدای شما،
-
-          <span>
-            برای ما اهمیت دارد.
-          </span>
-
-        </h1>
-
-
-        <p class="hero-description">
-
-          شکایت خود را به‌صورت امن ثبت کنید و مراحل رسیدگی به پرونده
-          را شفاف و آنلاین پیگیری کنید.
-
-        </p>
-
-
-        <div class="hero-buttons">
-
-
-          <a
-            href="auth.html"
-            class="btn btn-primary btn-large"
-          >
-
-            ورود به پنل کاربری
-
-            <span>
-              ←
-            </span>
-
-          </a>
-
-
-          <a
-            href="auth.html"
-            class="btn btn-secondary btn-large"
-          >
-
-            ثبت شکایت
-
-            <span>
-              ＋
-            </span>
-
-          </a>
-
-
-        </div>
-
-
-        <div class="trust-items">
-
-
-          <span>
-
-            <b>
-              ✓
-            </b>
-
-            ثبت امن اطلاعات
-
-          </span>
-
-
-          <span>
-
-            <b>
-              ✓
-            </b>
-
-            پیگیری با کد پرونده
-
-          </span>
-
-
-          <span>
-
-            <b>
-              ✓
-            </b>
-
-            اعلان تغییر وضعیت
-
-          </span>
-
-
-        </div>
-
-
-      </div>
-
-
-
-      <!-- Dashboard Preview -->
-
-
-      <div class="dashboard-wrapper reveal">
-
-
-        <div class="dashboard glass">
-
-
-          <div class="dashboard-header">
-
+  <main class="auth-main">
+    <div class="container">
+
+      <div class="auth-wrapper">
+
+        <div class="auth-intro">
+          <span class="eyebrow">حساب کاربری</span>
+
+          <h1 id="authTitle">
+            ورود به سامانه
+          </h1>
+
+          <p id="authDescription">
+            با شماره تلفن و رمز عبور خود وارد حساب کاربری شوید.
+          </p>
+
+          <div class="auth-benefits">
+            <div>
+              <span>✓</span>
+              <p>مشاهده پرونده‌های ثبت‌شده</p>
+            </div>
 
             <div>
+              <span>✓</span>
+              <p>پیگیری وضعیت شکایت‌ها</p>
+            </div>
 
-              <small>
-                داشبورد
-              </small>
+            <div>
+              <span>✓</span>
+              <p>دریافت ابلاغیه و پاسخ</p>
+            </div>
+          </div>
+        </div>
 
-              <h3>
-                نمای کلی پرونده‌ها
-              </h3>
+        <section class="auth-card glass-card">
+
+          <div class="auth-tabs">
+            <button
+              id="loginTab"
+              class="auth-tab active"
+              type="button"
+            >
+              ورود
+            </button>
+
+            <button
+              id="registerTab"
+              class="auth-tab"
+              type="button"
+            >
+              ثبت‌نام
+            </button>
+          </div>
+
+          <div
+            id="authMessage"
+            class="auth-message"
+            hidden
+          ></div>
+
+          <!-- Login -->
+
+          <form id="loginForm" class="auth-form">
+
+            <div class="form-group">
+              <label for="loginPhone">
+                شماره تلفن
+              </label>
+
+              <input
+                id="loginPhone"
+                name="phone"
+                type="tel"
+                inputmode="numeric"
+                autocomplete="tel"
+                placeholder="مثلاً 09123456789"
+                maxlength="15"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="loginPassword">
+                رمز عبور
+              </label>
+
+              <input
+                id="loginPassword"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="رمز عبور"
+                minlength="6"
+                required
+              >
+            </div>
+
+            <button
+              id="loginButton"
+              type="submit"
+              class="btn btn-primary btn-large auth-submit"
+            >
+              ورود به حساب
+            </button>
+
+          </form>
+
+          <!-- Register -->
+
+          <form
+            id="registerForm"
+            class="auth-form"
+            hidden
+          >
+
+            <div class="form-group">
+              <label for="registerName">
+                نام و نام خانوادگی
+              </label>
+
+              <input
+                id="registerName"
+                name="full_name"
+                type="text"
+                autocomplete="name"
+                placeholder="نام و نام خانوادگی"
+                maxlength="120"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="registerPhone">
+                شماره تلفن
+              </label>
+
+              <input
+                id="registerPhone"
+                name="phone"
+                type="tel"
+                inputmode="numeric"
+                autocomplete="tel"
+                placeholder="مثلاً 09123456789"
+                maxlength="15"
+                required
+              >
+            </div>
+
+            <div class="form-row">
+
+              <div class="form-group">
+                <label for="registerPassword">
+                  رمز عبور
+                </label>
+
+                <input
+                  id="registerPassword"
+                  name="password"
+                  type="password"
+                  autocomplete="new-password"
+                  placeholder="حداقل ۶ کاراکتر"
+                  minlength="6"
+                  required
+                >
+              </div>
+
+              <div class="form-group">
+                <label for="registerPasswordConfirm">
+                  تکرار رمز عبور
+                </label>
+
+                <input
+                  id="registerPasswordConfirm"
+                  name="password_confirm"
+                  type="password"
+                  autocomplete="new-password"
+                  placeholder="تکرار رمز عبور"
+                  minlength="6"
+                  required
+                >
+              </div>
 
             </div>
 
-
-            <span class="online-status">
-
-              <i></i>
-
-              فعال
-
-            </span>
-
-
-          </div>
-
-
-
-          <div class="dashboard-stats">
-
-
-            <div class="stat-card">
-
-              <strong>
-                ۱۲
-              </strong>
+            <label class="checkbox-row">
+              <input
+                id="acceptTerms"
+                type="checkbox"
+                required
+              >
 
               <span>
-                کل شکایت‌ها
+                قوانین و شرایط استفاده از سامانه را می‌پذیرم.
               </span>
+            </label>
 
-            </div>
+            <button
+              id="registerButton"
+              type="submit"
+              class="btn btn-primary btn-large auth-submit"
+            >
+              ایجاد حساب کاربری
+            </button>
 
+          </form>
 
-            <div class="stat-card">
-
-              <strong>
-                ۴
-              </strong>
-
-              <span>
-                در حال بررسی
-              </span>
-
-            </div>
-
-
-            <div class="stat-card">
-
-              <strong>
-                ۵
-              </strong>
-
-              <span>
-                پاسخ داده شده
-              </span>
-
-            </div>
-
-
-            <div class="stat-card">
-
-              <strong>
-                ۳
-              </strong>
-
-              <span>
-                مختومه
-              </span>
-
-            </div>
-
-
+          <div class="auth-footer">
+            <a href="/">
+              ← بازگشت به صفحه اصلی
+            </a>
           </div>
 
-
-
-          <div class="timeline">
-
-
-            <div class="timeline-line"></div>
-
-
-            <div class="timeline-item completed">
-
-
-              <div class="timeline-icon">
-                ✓
-              </div>
-
-
-              <div class="timeline-content">
-
-                <strong>
-                  ثبت شکایت
-                </strong>
-
-                <span>
-                  پرونده با موفقیت ثبت شد
-                </span>
-
-              </div>
-
-
-            </div>
-
-
-
-            <div class="timeline-item completed">
-
-
-              <div class="timeline-icon">
-                ✓
-              </div>
-
-
-              <div class="timeline-content">
-
-                <strong>
-                  بررسی اولیه
-                </strong>
-
-                <span>
-                  اطلاعات پرونده بررسی شد
-                </span>
-
-              </div>
-
-
-            </div>
-
-
-
-            <div class="timeline-item active">
-
-
-              <div class="timeline-icon">
-                •
-              </div>
-
-
-              <div class="timeline-content">
-
-                <strong>
-                  ارجاع
-                </strong>
-
-                <span>
-                  در انتظار بررسی مسئول رسیدگی
-                </span>
-
-              </div>
-
-
-            </div>
-
-
-
-            <div class="timeline-item">
-
-
-              <div class="timeline-icon">
-                ۴
-              </div>
-
-
-              <div class="timeline-content">
-
-                <strong>
-                  پاسخ نهایی
-                </strong>
-
-                <span>
-                  پس از تکمیل رسیدگی
-                </span>
-
-              </div>
-
-
-            </div>
-
-
-          </div>
-
-
-        </div>
-
+        </section>
 
       </div>
 
-
-    </section>
-
-
-
-    <!-- =========================
-         FEATURES
-    ========================== -->
-
-
-    <section
-      id="features"
-      class="section features-section"
-    >
-
-
-      <div class="section-heading reveal">
-
-
-        <span>
-          امکانات سامانه
-        </span>
-
-
-        <h2>
-
-          همه‌چیز برای پیگیری
-
-          <em>
-            شفاف
-          </em>
-
-        </h2>
-
-
-        <p>
-
-          از ثبت اولیه تا پاسخ نهایی، وضعیت پرونده را
-          در یک محیط ساده و منظم دنبال کنید.
-
-        </p>
-
-
-      </div>
-
-
-
-      <div class="feature-grid">
-
-
-        <!-- Feature 1 -->
-
-
-        <article class="feature-card glass reveal">
-
-
-          <div class="feature-icon">
-            ＋
-          </div>
-
-
-          <h3>
-            ثبت شکایت
-          </h3>
-
-
-          <p>
-
-            درخواست یا شکایت خود را با جزئیات ثبت کنید
-            و اطلاعات پرونده را بررسی و تأیید نمایید.
-
-          </p>
-
-
-          <a href="auth.html">
-
-            شروع ثبت
-
-            <span>
-              ←
-            </span>
-
-          </a>
-
-
-        </article>
-
-
-
-        <!-- Feature 2 -->
-
-
-        <article class="feature-card glass reveal">
-
-
-          <div class="feature-icon">
-            ⌁
-          </div>
-
-
-          <h3>
-            پیگیری پرونده
-          </h3>
-
-
-          <p>
-
-            با کد پیگیری، آخرین وضعیت پرونده و مراحل
-            رسیدگی را مشاهده کنید.
-
-          </p>
-
-
-          <a href="auth.html">
-
-            پیگیری پرونده
-
-            <span>
-              ←
-            </span>
-
-          </a>
-
-
-        </article>
-
-
-
-        <!-- Feature 3 -->
-
-
-        <article class="feature-card glass reveal">
-
-
-          <div class="feature-icon">
-            ◔
-          </div>
-
-
-          <h3>
-            اعلان‌ها
-          </h3>
-
-
-          <p>
-
-            از تغییر وضعیت پرونده و مراحل جدید
-            رسیدگی مطلع شوید.
-
-          </p>
-
-
-          <a href="auth.html">
-
-            ورود به پنل
-
-            <span>
-              ←
-            </span>
-
-          </a>
-
-
-        </article>
-
-
-      </div>
-
-
-    </section>
-
-
-
-    <!-- =========================
-         SECURITY
-    ========================== -->
-
-
-    <section
-      id="security"
-      class="section"
-    >
-
-
-      <div class="security-card glass reveal">
-
-
-        <div class="security-content">
-
-
-          <span class="eyebrow">
-
-            حریم خصوصی و امنیت
-
-          </span>
-
-
-          <h2>
-
-            اطلاعات شما،
-
-            <span>
-              با دقت نگهداری می‌شود.
-            </span>
-
-          </h2>
-
-
-          <p>
-
-            اطلاعات شما با دسترسی کنترل‌شده و امنیت مناسب
-            نگهداری می‌شود. تغییرات مهم پرونده نیز قابل ثبت
-            و پیگیری خواهند بود.
-
-          </p>
-
-
-        </div>
-
-
-
-        <div class="security-badge">
-
-
-          <div class="security-symbol">
-            🔒
-          </div>
-
-
-          <div>
-
-            <strong>
-              دسترسی کنترل‌شده
-            </strong>
-
-            <span>
-              ثبت رویدادهای پرونده
-            </span>
-
-          </div>
-
-
-        </div>
-
-
-      </div>
-
-
-    </section>
-
-
-
-    <!-- =========================
-         ABOUT
-    ========================== -->
-
-
-    <section
-      id="about"
-      class="section about-section"
-    >
-
-
-      <div class="section-heading reveal">
-
-
-        <span>
-          درباره سامانه
-        </span>
-
-
-        <h2>
-
-          یک مسیر ساده برای
-
-          <em>
-            پیگیری پرونده
-          </em>
-
-        </h2>
-
-
-        <p>
-
-          این سامانه برای ثبت منظم درخواست‌ها و شکایات،
-          مدیریت مراحل رسیدگی و ارائه یک مسیر شفاف برای
-          پیگیری پرونده طراحی شده است.
-
-        </p>
-
-
-      </div>
-
-
-
-      <div class="about-grid">
-
-
-        <div class="about-item glass reveal">
-
-
-          <strong>
-            ۰۱
-          </strong>
-
-
-          <h3>
-            ثبت اطلاعات
-          </h3>
-
-
-          <p>
-            اطلاعات درخواست و شرح شکایت را ثبت کنید.
-          </p>
-
-
-        </div>
-
-
-
-        <div class="about-item glass reveal">
-
-
-          <strong>
-            ۰۲
-          </strong>
-
-
-          <h3>
-            بررسی پرونده
-          </h3>
-
-
-          <p>
-            پرونده وارد مراحل بررسی و رسیدگی می‌شود.
-          </p>
-
-
-        </div>
-
-
-
-        <div class="about-item glass reveal">
-
-
-          <strong>
-            ۰۳
-          </strong>
-
-
-          <h3>
-            پیگیری آنلاین
-          </h3>
-
-
-          <p>
-            مراحل پرونده را از طریق پنل مشاهده کنید.
-          </p>
-
-
-        </div>
-
-
-      </div>
-
-
-    </section>
-
-
+    </div>
   </main>
 
-
-
-  <!-- =========================
-       FOOTER
-  ========================== -->
-
-
-  <footer class="footer">
-
-
-    <div>
-
-      <strong>
-        سامانه ثبت و پیگیری شکایات
-      </strong>
-
-      <span>
-        مدیریت منظم و شفاف پرونده‌ها
-      </span>
-
-    </div>
-
-
-    <div>
-
-      © سامانه ثبت و پیگیری شکایات
-
-    </div>
-
-
-  </footer>
-
-
-
-  <script src="js/app.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/auth.js"></script>
 
 </body>
-
 </html>
