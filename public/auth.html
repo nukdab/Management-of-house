@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ورود و ثبت‌نام در سامانه مدیریت شکایات">
+  <title>ورود | سامانه مدیریت شکایات</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="auth-page">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="brand">
+        <span class="brand-icon">⚖</span>
+        <span>سامانه مدیریت شکایات</span>
+      </a>
+
+      <div class="header-actions">
+        <button
+          id="themeToggle"
+          class="icon-btn"
+          type="button"
+          aria-label="تغییر پوسته"
+        >
+          ☀️
+        </button>
+
+        <a href="/" class="btn btn-secondary">
+          صفحه اصلی
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="auth-main">
+    <div class="container">
+
+      <div class="auth-wrapper">
+
+        <div class="auth-intro">
+          <span class="eyebrow">حساب کاربری</span>
+
+          <h1 id="authTitle">
+            ورود به سامانه
+          </h1>
+
+          <p id="authDescription">
+            با شماره تلفن و رمز عبور خود وارد حساب کاربری شوید.
+          </p>
+
+          <div class="auth-benefits">
+            <div>
+              <span>✓</span>
+              <p>مشاهده پرونده‌های ثبت‌شده</p>
+            </div>
+
+            <div>
+              <span>✓</span>
+              <p>پیگیری وضعیت شکایت‌ها</p>
+            </div>
+
+            <div>
+              <span>✓</span>
+              <p>دریافت ابلاغیه و پاسخ</p>
+            </div>
+          </div>
+        </div>
+
+        <section class="auth-card glass-card">
+
+          <div class="auth-tabs">
+            <button
+              id="loginTab"
+              class="auth-tab active"
+              type="button"
+            >
+              ورود
+            </button>
+
+            <button
+              id="registerTab"
+              class="auth-tab"
+              type="button"
+            >
+              ثبت‌نام
+            </button>
+          </div>
+
+          <div
+            id="authMessage"
+            class="auth-message"
+            hidden
+          ></div>
+
+          <!-- Login -->
+
+          <form id="loginForm" class="auth-form">
+
+            <div class="form-group">
+              <label for="loginPhone">
+                شماره تلفن
+              </label>
+
+              <input
+                id="loginPhone"
+                name="phone"
+                type="tel"
+                inputmode="numeric"
+                autocomplete="tel"
+                placeholder="مثلاً 09123456789"
+                maxlength="15"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="loginPassword">
+                رمز عبور
+              </label>
+
+              <input
+                id="loginPassword"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="رمز عبور"
+                minlength="6"
+                required
+              >
+            </div>
+
+            <button
+              id="loginButton"
+              type="submit"
+              class="btn btn-primary btn-large auth-submit"
+            >
+              ورود به حساب
+            </button>
+
+          </form>
+
+          <!-- Register -->
+
+          <form
+            id="registerForm"
+            class="auth-form"
+            hidden
+          >
+
+            <div class="form-group">
+              <label for="registerName">
+                نام و نام خانوادگی
+              </label>
+
+              <input
+                id="registerName"
+                name="full_name"
+                type="text"
+                autocomplete="name"
+                placeholder="نام و نام خانوادگی"
+                maxlength="120"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="registerPhone">
+                شماره تلفن
+              </label>
+
+              <input
+                id="registerPhone"
+                name="phone"
+                type="tel"
+                inputmode="numeric"
+                autocomplete="tel"
+                placeholder="مثلاً 09123456789"
+                maxlength="15"
+                required
+              >
+            </div>
+
+            <div class="form-row">
+
+              <div class="form-group">
+                <label for="registerPassword">
+                  رمز عبور
+                </label>
+
+                <input
+                  id="registerPassword"
+                  name="password"
+                  type="password"
+                  autocomplete="new-password"
+                  placeholder="حداقل ۶ کاراکتر"
+                  minlength="6"
+                  required
+                >
+              </div>
+
+              <div class="form-group">
+                <label for="registerPasswordConfirm">
+                  تکرار رمز عبور
+                </label>
+
+                <input
+                  id="registerPasswordConfirm"
+                  name="password_confirm"
+                  type="password"
+                  autocomplete="new-password"
+                  placeholder="تکرار رمز عبور"
+                  minlength="6"
+                  required
+                >
+              </div>
+
+            </div>
+
+            <label class="checkbox-row">
+              <input
+                id="acceptTerms"
+                type="checkbox"
+                required
+              >
+
+              <span>
+                قوانین و شرایط استفاده از سامانه را می‌پذیرم.
+              </span>
+            </label>
+
+            <button
+              id="registerButton"
+              type="submit"
+              class="btn btn-primary btn-large auth-submit"
+            >
+              ایجاد حساب کاربری
+            </button>
+
+          </form>
+
+          <div class="auth-footer">
+            <a href="/">
+              ← بازگشت به صفحه اصلی
+            </a>
+          </div>
+
+        </section>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/auth.js"></script>
+
+</body>
+  </html>
