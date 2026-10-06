@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1020">
+  <title>پنل مدیریت | سامانه رسیدگی</title>
+
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="admin-page">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="brand">
+        <span class="brand-mark">⚖</span>
+        <span>سامانه رسیدگی</span>
+      </a>
+
+      <div class="header-actions">
+        <button
+          type="button"
+          class="theme-toggle"
+          id="themeToggle"
+          aria-label="تغییر حالت نمایش"
+          title="تغییر حالت نمایش"
+        >
+          ☀️
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-secondary btn-small"
+          id="logoutButton"
+        >
+          خروج
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container admin-container">
+
+    <section class="page-heading">
+      <div>
+        <span class="eyebrow">مدیریت سامانه</span>
+        <h1>پنل مدیریت</h1>
+        <p id="adminWelcome">در حال دریافت اطلاعات مدیر...</p>
+      </div>
+
+      <a href="/complaint.html" class="btn btn-primary">
+        ثبت شکایت جدید
+      </a>
+    </section>
+
+    <div id="adminAlert" class="alert hidden" role="alert"></div>
+
+    <!-- آمار -->
+    <section class="stats-grid admin-stats">
+
+      <article class="stat-card">
+        <span class="stat-label">کل پرونده‌ها</span>
+        <strong id="totalCases">۰</strong>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-label">جدید</span>
+        <strong id="newCases">۰</strong>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-label">در حال بررسی</span>
+        <strong id="reviewCases">۰</strong>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-label">پاسخ داده‌شده</span>
+        <strong id="answeredCases">۰</strong>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-label">مختومه</span>
+        <strong id="closedCases">۰</strong>
+      </article>
+
+    </section>
+
+    <!-- جستجو و فیلتر -->
+    <section class="panel admin-panel">
+
+      <div class="panel-header">
+        <div>
+          <h2>پرونده‌ها</h2>
+          <p>جستجو، مشاهده و مدیریت پرونده‌های ثبت‌شده</p>
+        </div>
+      </div>
+
+      <form id="searchForm" class="admin-search-form">
+
+        <div class="form-group">
+          <label for="searchInput">کد پیگیری</label>
+          <input
+            type="text"
+            id="searchInput"
+            name="search"
+            placeholder="کد پیگیری را وارد کنید"
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="statusFilter">وضعیت</label>
+
+          <select id="statusFilter" name="status">
+            <option value="">همه وضعیت‌ها</option>
+            <option value="new">جدید</option>
+            <option value="under_review">در حال بررسی</option>
+            <option value="answered">پاسخ داده شده</option>
+            <option value="closed">مختومه</option>
+          </select>
+        </div>
+
+        <div class="admin-search-actions">
+          <button type="submit" class="btn btn-primary">
+            جستجو
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="clearSearchButton"
+          >
+            پاک کردن
+          </button>
+        </div>
+
+      </form>
+
+      <div id="casesLoading" class="loading-state hidden">
+        در حال دریافت پرونده‌ها...
+      </div>
+
+      <div id="casesEmpty" class="empty-state hidden">
+        <div class="empty-icon">📂</div>
+        <h3>پرونده‌ای پیدا نشد</h3>
+        <p>با تغییر فیلترها یا عبارت جستجو دوباره تلاش کنید.</p>
+      </div>
+
+      <div id="casesTableWrapper" class="table-wrapper">
+
+        <table class="data-table">
+
+          <thead>
+            <tr>
+              <th>کد پیگیری</th>
+              <th>موضوع</th>
+              <th>دسته‌بندی</th>
+              <th>ثبت‌کننده</th>
+              <th>وضعیت</th>
+              <th>تاریخ ثبت</th>
+              <th>عملیات</th>
+            </tr>
+          </thead>
+
+          <tbody id="casesTableBody"></tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+    <!-- جزئیات پرونده -->
+    <section
+      class="panel admin-panel hidden"
+      id="caseDetailsPanel"
+    >
+
+      <div class="panel-header">
+        <div>
+          <span class="eyebrow">جزئیات پرونده</span>
+          <h2 id="detailSubject">—</h2>
+          <p id="detailTrackingCode">—</p>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-secondary btn-small"
+          id="closeDetailsButton"
+        >
+          بستن
+        </button>
+      </div>
+
+      <div class="case-detail-grid">
+
+        <div class="detail-item">
+          <span>کد پیگیری</span>
+          <strong id="detailCode">—</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>وضعیت</span>
+          <strong id="detailStatus">—</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>دسته‌بندی</span>
+          <strong id="detailCategory">—</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>تاریخ ثبت</span>
+          <strong id="detailCreatedAt">—</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>نام ثبت‌کننده</span>
+          <strong id="detailUserName">—</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>شماره تماس</span>
+          <strong id="detailUserPhone">—</strong>
+        </div>
+
+      </div>
+
+      <!-- مشخصات شخص مورد شکایت -->
+      <div
+        class="detail-section hidden"
+        id="otherPersonSection"
+      >
+        <h3>مشخصات شخص معرفی‌شده</h3>
+
+        <div class="case-detail-grid">
+
+          <div class="detail-item">
+            <span>نام و نام خانوادگی</span>
+            <strong id="detailOtherName">—</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>شماره تماس</span>
+            <strong id="detailOtherPhone">—</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>کد ملی</span>
+            <strong id="detailOtherNationalId">—</strong>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- شرح -->
+      <div class="detail-section">
+
+        <h3>شرح شکایت</h3>
+
+        <div class="description-box" id="detailDescription">
+          —
+        </div>
+
+      </div>
+
+      <!-- امضا -->
+      <div class="detail-section">
+
+        <h3>امضای ثبت‌کننده</h3>
+
+        <div class="signature-view">
+          <img
+            id="detailSignature"
+            src=""
+            alt="امضای ثبت‌کننده"
+            class="signature-image hidden"
+          >
+
+          <p id="noSignatureMessage" class="muted-text">
+            امضایی ثبت نشده است.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- پیوست‌ها -->
+      <div class="detail-section">
+
+        <h3>پیوست‌ها</h3>
+
+        <div id="detailAttachments" class="attachment-list">
+          <p class="muted-text">پیوستی وجود ندارد.</p>
+        </div>
+
+      </div>
+
+      <!-- تغییر وضعیت -->
+      <div class="detail-section">
+
+        <h3>تغییر وضعیت پرونده</h3>
+
+        <form id="statusForm" class="status-form">
+
+          <input type="hidden" id="statusCaseId">
+
+          <div class="form-group">
+            <label for="caseStatus">وضعیت جدید</label>
+
+            <select id="caseStatus">
+              <option value="new">جدید</option>
+              <option value="under_review">در حال بررسی</option>
+              <option value="answered">پاسخ داده شده</option>
+              <option value="closed">مختومه</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="statusDescription">
+              توضیح تغییر وضعیت
+            </label>
+
+            <textarea
+              id="statusDescription"
+              rows="4"
+              maxlength="1000"
+              placeholder="توضیح مربوط به این تغییر وضعیت..."
+            ></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            ذخیره وضعیت
+          </button>
+
+        </form>
+
+      </div>
+
+      <!-- تاریخچه -->
+      <div class="detail-section">
+
+        <h3>تاریخچه پرونده</h3>
+
+        <div id="caseTimeline" class="timeline">
+          <p class="muted-text">در حال دریافت تاریخچه...</p>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ابلاغیه -->
+    <section class="panel admin-panel">
+
+      <div class="panel-header">
+        <div>
+          <h2>ارسال ابلاغیه داخلی</h2>
+          <p>
+            پیام را برای کاربر یک پرونده ارسال کنید.
+          </p>
+        </div>
+      </div>
+
+      <form id="notificationForm">
+
+        <input type="hidden" id="notificationCaseId">
+
+        <div class="form-group">
+          <label for="notificationTitle">عنوان ابلاغیه</label>
+
+          <input
+            type="text"
+            id="notificationTitle"
+            maxlength="200"
+            placeholder="مثلاً: اطلاع‌رسانی درباره پرونده"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="notificationMessage">متن ابلاغیه</label>
+
+          <textarea
+            id="notificationMessage"
+            rows="6"
+            maxlength="5000"
+            placeholder="متن پیام را وارد کنید..."
+            required
+          ></textarea>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+        >
+          ارسال ابلاغیه
+        </button>
+
+      </form>
+
+    </section>
+
+    <!-- نتیجه ارسال -->
+    <div
+      id="notificationResult"
+      class="alert hidden"
+      role="status"
+    ></div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        سامانه رسیدگی — پنل مدیریت
+      </p>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/admin.js"></script>
+
+</body>
+            </html>
