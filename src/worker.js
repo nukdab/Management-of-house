@@ -2,8 +2,6 @@ const SESSION_DAYS = 30;
 const PASSWORD_ITERATIONS = 120000;
 
 const MAX_DESCRIPTION = 10000;
-const MAX_TEXT = 500;
-
 const MAX_ATTACHMENTS = 5;
 const MAX_FILE_SIZE = 500 * 1024;
 const MAX_TOTAL_FILE_SIZE = 1500 * 1024;
@@ -46,12 +44,15 @@ export default {
       // ADMIN BOOTSTRAP
       // ======================================================
 
-      if (url.pathname === "/api/admin/bootstrap") {
+      if (
+        url.pathname === "/api/admin/bootstrap" &&
+        request.method === "POST"
+      ) {
         return await handleAdminBootstrap(request, env);
       }
 
       // ======================================================
-      // USER CASES
+      // CASES
       // ======================================================
 
       if (
@@ -112,7 +113,37 @@ export default {
       }
 
       // ======================================================
-      // NOTIFICATIONS
+      // ATTACHMENTS
+      // ======================================================
+
+      const attachmentMatch =
+        url.pathname.match(
+          /^\/api\/attachments\/(\d+)$/
+        );
+
+      if (
+        attachmentMatch &&
+        request.method === "GET"
+      ) {
+        return await downloadAttachment(
+          request,
+          env,
+          Number(attachmentMatch[1])
+        );
+      }
+
+      if (
+        url.pathname === "/api/admin/attachments" &&
+        request.method === "POST"
+      ) {
+        return await adminAddAttachments(
+          request,
+          env
+        );
+      }
+
+      // ======================================================
+      // NOTIFICATIONS - USER
       // ======================================================
 
       if (
@@ -217,40 +248,28 @@ async function handleAuth(
     url.pathname === "/api/auth/register" &&
     request.method === "POST"
   ) {
-    return await register(
-      request,
-      env
-    );
+    return await register(request, env);
   }
 
   if (
     url.pathname === "/api/auth/login" &&
     request.method === "POST"
   ) {
-    return await login(
-      request,
-      env
-    );
+    return await login(request, env);
   }
 
   if (
     url.pathname === "/api/auth/logout" &&
     request.method === "POST"
   ) {
-    return await logout(
-      request,
-      env
-    );
+    return await logout(request, env);
   }
 
   if (
     url.pathname === "/api/auth/me" &&
     request.method === "GET"
   ) {
-    return await getCurrentUser(
-      request,
-      env
-    );
+    return await getCurrentUser(request, env);
   }
 
   return json(
@@ -263,28 +282,21 @@ async function handleAuth(
 }
 
 
-async function register(
-  request,
-  env
-) {
-  const body =
-    await readJson(request);
+async function register(request, env) {
+  const body = await readJson(request);
 
-  const fullName =
-    cleanText(
-      body.full_name,
-      100
-    );
+  const fullName = cleanText(
+    body.full_name,
+    100
+  );
 
-  const phone =
-    normalizePhone(
-      body.phone
-    );
+  const phone = normalizePhone(
+    body.phone
+  );
 
-  const password =
-    String(
-      body.password || ""
-    );
+  const password = String(
+    body.password || ""
+  );
 
   if (!fullName) {
     return json(
@@ -316,13 +328,12 @@ async function register(
     );
   }
 
-  const existing =
-    await env.DB
-      .prepare(
-        "SELECT id FROM users WHERE phone = ? LIMIT 1"
-      )
-      .bind(phone)
-      .first();
+  const existing = await env.DB
+    .prepare(
+      "SELECT id FROM users WHERE phone = ? LIMIT 1"
+    )
+    .bind(phone)
+    .first();
 
   if (existing) {
     return json(
@@ -335,31 +346,28 @@ async function register(
   }
 
   const passwordData =
-    await hashPassword(
-      password
-    );
+    await hashPassword(password);
 
-  const result =
-    await env.DB
-      .prepare(`
-        INSERT INTO users
-        (
-          full_name,
-          phone,
-          password_hash,
-          password_salt,
-          role,
-          is_active
-        )
-        VALUES (?, ?, ?, ?, 'user', 1)
-      `)
-      .bind(
-        fullName,
+  const result = await env.DB
+    .prepare(`
+      INSERT INTO users
+      (
+        full_name,
         phone,
-        passwordData.hash,
-        passwordData.salt
+        password_hash,
+        password_salt,
+        role,
+        is_active
       )
-      .run();
+      VALUES (?, ?, ?, ?, 'user', 1)
+    `)
+    .bind(
+      fullName,
+      phone,
+      passwordData.hash,
+      passwordData.salt
+    )
+    .run();
 
   if (!result.success) {
     return json(
@@ -371,22 +379,20 @@ async function register(
     );
   }
 
-  const user =
-    await env.DB
-      .prepare(`
-        SELECT
-          id,
-          full_name,
-          phone,
-          role,
-          is_active,
-          created_at
-        FROM users
-        WHERE phone = ?
-        LIMIT 1
-      `)
-      .bind(phone)
-      .first();
+  const user = await env.DB
+    .prepare(`
+      SELECT
+        id,
+        full_name,
+        phone,
+        role,
+        created_at
+      FROM users
+      WHERE phone = ?
+      LIMIT 1
+    `)
+    .bind(phone)
+    .first();
 
   const session =
     await createSession(
@@ -417,22 +423,16 @@ async function register(
 }
 
 
-async function login(
-  request,
-  env
-) {
-  const body =
-    await readJson(request);
+async function login(request, env) {
+  const body = await readJson(request);
 
-  const phone =
-    normalizePhone(
-      body.phone
-    );
+  const phone = normalizePhone(
+    body.phone
+  );
 
-  const password =
-    String(
-      body.password || ""
-    );
+  const password = String(
+    body.password || ""
+  );
 
   if (
     !isValidPhone(phone) ||
@@ -447,24 +447,23 @@ async function login(
     );
   }
 
-  const user =
-    await env.DB
-      .prepare(`
-        SELECT
-          id,
-          full_name,
-          phone,
-          password_hash,
-          password_salt,
-          role,
-          is_active,
-          created_at
-        FROM users
-        WHERE phone = ?
-        LIMIT 1
-      `)
-      .bind(phone)
-      .first();
+  const user = await env.DB
+    .prepare(`
+      SELECT
+        id,
+        full_name,
+        phone,
+        password_hash,
+        password_salt,
+        role,
+        is_active,
+        created_at
+      FROM users
+      WHERE phone = ?
+      LIMIT 1
+    `)
+    .bind(phone)
+    .first();
 
   if (
     !user ||
@@ -525,18 +524,13 @@ async function login(
 }
 
 
-async function logout(
-  request,
-  env
-) {
+async function logout(request, env) {
   const token =
     getSessionToken(request);
 
   if (token) {
     const tokenHash =
-      await sha256Base64Url(
-        token
-      );
+      await sha256Base64Url(token);
 
     await env.DB
       .prepare(
@@ -602,16 +596,6 @@ async function handleAdminBootstrap(
   request,
   env
 ) {
-  if (request.method !== "POST") {
-    return json(
-      {
-        success: false,
-        error: "Method Not Allowed"
-      },
-      405
-    );
-  }
-
   if (!env.ADMIN_SETUP_KEY) {
     return json(
       {
@@ -728,9 +712,7 @@ async function handleAdminBootstrap(
   }
 
   const passwordData =
-    await hashPassword(
-      password
-    );
+    await hashPassword(password);
 
   const result =
     await env.DB
@@ -775,7 +757,7 @@ async function handleAdminBootstrap(
 
 
 // ============================================================
-// CASES - USER
+// CREATE CASE
 // ============================================================
 
 async function createCase(
@@ -917,10 +899,6 @@ async function createCase(
     }
   }
 
-  // ----------------------------------------------------------
-  // SIGNATURE
-  // ----------------------------------------------------------
-
   let signatureData = null;
 
   if (
@@ -948,145 +926,31 @@ async function createCase(
     }
   }
 
-  // ----------------------------------------------------------
-  // ATTACHMENTS
-  // ----------------------------------------------------------
-
   const attachments =
     Array.isArray(body.attachments)
       ? body.attachments
       : [];
 
-  if (
-    attachments.length >
-    MAX_ATTACHMENTS
-  ) {
+  const validatedAttachments =
+    validateAttachments(
+      attachments
+    );
+
+  if (!validatedAttachments.ok) {
     return json(
       {
         success: false,
-        error: "حداکثر ۵ فایل را می‌توانید پیوست کنید"
+        error: validatedAttachments.error
       },
       400
     );
   }
-
-  let totalAttachmentSize = 0;
-
-  for (
-    const file of attachments
-  ) {
-    const fileName =
-      cleanText(
-        file?.file_name,
-        200
-      );
-
-    const contentType =
-      cleanText(
-        file?.content_type,
-        100
-      );
-
-    const fileSize =
-      Number(
-        file?.file_size
-      );
-
-    const fileData =
-      typeof file?.file_data === "string"
-        ? file.file_data
-        : "";
-
-    if (
-      !fileName ||
-      !contentType ||
-      !Number.isInteger(fileSize) ||
-      fileSize < 0 ||
-      !fileData
-    ) {
-      return json(
-        {
-          success: false,
-          error: "اطلاعات یکی از فایل‌های پیوست نامعتبر است"
-        },
-        400
-      );
-    }
-
-    if (
-      fileSize >
-      MAX_FILE_SIZE
-    ) {
-      return json(
-        {
-          success: false,
-          error:
-            "حجم هر فایل نباید بیشتر از ۵۰۰ کیلوبایت باشد"
-        },
-        400
-      );
-    }
-
-    totalAttachmentSize +=
-      fileSize;
-
-    if (
-      totalAttachmentSize >
-      MAX_TOTAL_FILE_SIZE
-    ) {
-      return json(
-        {
-          success: false,
-          error:
-            "حجم مجموع فایل‌ها نباید بیشتر از ۱.۵ مگابایت باشد"
-        },
-        400
-      );
-    }
-
-    if (
-      fileData.length >
-      MAX_FILE_DATA_LENGTH
-    ) {
-      return json(
-        {
-          success: false,
-          error:
-            "داده یکی از فایل‌های پیوست بیش از حد مجاز است"
-        },
-        400
-      );
-    }
-
-    if (
-      !fileData.startsWith(
-        "data:"
-      )
-    ) {
-      return json(
-        {
-          success: false,
-          error:
-            "فرمت یکی از فایل‌های پیوست نامعتبر است"
-        },
-        400
-      );
-    }
-  }
-
-  // ----------------------------------------------------------
-  // TRACKING CODE
-  // ----------------------------------------------------------
 
   const trackingCode =
     await generateTrackingCode(
       env,
       complainantType
     );
-
-  // ----------------------------------------------------------
-  // INSERT CASE
-  // ----------------------------------------------------------
 
   const result =
     await env.DB
@@ -1144,46 +1008,15 @@ async function createCase(
     );
   }
 
-  // ----------------------------------------------------------
-  // SAVE ATTACHMENTS
-  // ----------------------------------------------------------
-
   for (
-    const file of attachments
+    const file of validatedAttachments.files
   ) {
-    await env.DB
-      .prepare(`
-        INSERT INTO attachments
-        (
-          case_id,
-          file_name,
-          content_type,
-          file_size,
-          file_data
-        )
-        VALUES (?, ?, ?, ?, ?)
-      `)
-      .bind(
-        caseId,
-        cleanText(
-          file.file_name,
-          200
-        ),
-        cleanText(
-          file.content_type,
-          100
-        ),
-        Number(
-          file.file_size
-        ),
-        file.file_data
-      )
-      .run();
+    await insertAttachment(
+      env,
+      caseId,
+      file
+    );
   }
-
-  // ----------------------------------------------------------
-  // CREATE EVENT
-  // ----------------------------------------------------------
 
   await env.DB
     .prepare(`
@@ -1217,6 +1050,10 @@ async function createCase(
   );
 }
 
+
+// ============================================================
+// USER CASES
+// ============================================================
 
 async function listCases(
   request,
@@ -1259,8 +1096,7 @@ async function listCases(
 
   return json({
     success: true,
-    cases:
-      rows.results || []
+    cases: rows.results || []
   });
 }
 
@@ -1289,9 +1125,14 @@ async function getCase(
   const item =
     await env.DB
       .prepare(`
-        SELECT *
-        FROM cases
-        WHERE id = ?
+        SELECT
+          c.*,
+          u.full_name AS user_full_name,
+          u.phone AS user_phone
+        FROM cases c
+        INNER JOIN users u
+          ON u.id = c.user_id
+        WHERE c.id = ?
         LIMIT 1
       `)
       .bind(caseId)
@@ -1309,7 +1150,7 @@ async function getCase(
 
   if (
     user.role !== "admin" &&
-    item.user_id !== user.id
+    Number(item.user_id) !== Number(user.id)
   ) {
     return json(
       {
@@ -1354,16 +1195,14 @@ async function getCase(
   return json({
     success: true,
     case: item,
-    events:
-      events.results || [],
-    attachments:
-      attachments.results || []
+    events: events.results || [],
+    attachments: attachments.results || []
   });
 }
 
 
 // ============================================================
-// CASE UPDATE - ADMIN
+// UPDATE CASE - ADMIN
 // ============================================================
 
 async function updateCase(
@@ -1480,8 +1319,7 @@ async function updateCase(
     .run();
 
   if (
-    status !==
-    existing.status
+    status !== existing.status
   ) {
     await env.DB
       .prepare(`
@@ -1503,10 +1341,8 @@ async function updateCase(
   }
 
   if (
-    subject !==
-      existing.subject ||
-    description !==
-      existing.description
+    subject !== existing.subject ||
+    description !== existing.description
   ) {
     await env.DB
       .prepare(`
@@ -1534,17 +1370,14 @@ async function updateCase(
     "case",
     caseId,
     JSON.stringify({
-      old_status:
-        existing.status,
-      new_status:
-        status
+      old_status: existing.status,
+      new_status: status
     })
   );
 
   return json({
     success: true,
-    message:
-      "پرونده به‌روزرسانی شد"
+    message: "پرونده به‌روزرسانی شد"
   });
 }
 
@@ -1599,7 +1432,7 @@ async function getCaseEvents(
 
   if (
     user.role !== "admin" &&
-    item.user_id !== user.id
+    Number(item.user_id) !== Number(user.id)
   ) {
     return json(
       {
@@ -1630,14 +1463,13 @@ async function getCaseEvents(
 
   return json({
     success: true,
-    events:
-      events.results || []
+    events: events.results || []
   });
 }
 
 
 // ============================================================
-// ADMIN CASES
+// ADMIN CASE LIST
 // ============================================================
 
 async function adminListCases(
@@ -1661,77 +1493,416 @@ async function adminListCases(
   }
 
   const url =
-    new URL(
-      request.url
-    );
+    new URL(request.url);
 
   const search =
     cleanText(
-      url.searchParams.get(
-        "search"
-      ),
+      url.searchParams.get("search"),
       100
     );
 
-  let rows;
+  const status =
+    cleanText(
+      url.searchParams.get("status"),
+      50
+    );
+
+  const allowedStatuses = [
+    "new",
+    "under_review",
+    "answered",
+    "closed"
+  ];
+
+  let sql = `
+    SELECT
+      c.*,
+      u.full_name AS owner_name,
+      u.full_name AS user_full_name,
+      u.phone AS owner_phone,
+      u.phone AS user_phone
+    FROM cases c
+    INNER JOIN users u
+      ON u.id = c.user_id
+    WHERE 1 = 1
+  `;
+
+  const bindings = [];
 
   if (search) {
+    sql += `
+      AND (
+        c.tracking_code LIKE ?
+        OR c.subject LIKE ?
+        OR c.category LIKE ?
+        OR u.phone LIKE ?
+        OR u.full_name LIKE ?
+      )
+    `;
+
     const like =
       `%${search}%`;
 
-    rows =
-      await env.DB
-        .prepare(`
-          SELECT
-            c.*,
-            u.full_name AS owner_name,
-            u.phone AS owner_phone
-          FROM cases c
-          INNER JOIN users u
-            ON u.id = c.user_id
-          WHERE
-            c.tracking_code LIKE ?
-            OR c.subject LIKE ?
-            OR c.category LIKE ?
-            OR u.phone LIKE ?
-            OR u.full_name LIKE ?
-          ORDER BY c.id DESC
-        `)
-        .bind(
-          like,
-          like,
-          like,
-          like,
-          like
-        )
-        .all();
-
-  } else {
-    rows =
-      await env.DB
-        .prepare(`
-          SELECT
-            c.*,
-            u.full_name AS owner_name,
-            u.phone AS owner_phone
-          FROM cases c
-          INNER JOIN users u
-            ON u.id = c.user_id
-          ORDER BY c.id DESC
-        `)
-        .all();
+    bindings.push(
+      like,
+      like,
+      like,
+      like,
+      like
+    );
   }
+
+  if (
+    allowedStatuses.includes(status)
+  ) {
+    sql += `
+      AND c.status = ?
+    `;
+
+    bindings.push(status);
+  }
+
+  sql += `
+    ORDER BY c.id DESC
+  `;
+
+  const statement =
+    env.DB.prepare(sql);
+
+  const rows =
+    await statement
+      .bind(...bindings)
+      .all();
 
   return json({
     success: true,
-    cases:
-      rows.results || []
+    cases: rows.results || []
   });
 }
 
 
 // ============================================================
-// NOTIFICATIONS - ADMIN
+// ADMIN ATTACHMENTS
+// ============================================================
+
+async function adminAddAttachments(
+  request,
+  env
+) {
+  const admin =
+    await requireAdmin(
+      request,
+      env
+    );
+
+  if (!admin) {
+    return json(
+      {
+        success: false,
+        error: "دسترسی مدیر لازم است"
+      },
+      403
+    );
+  }
+
+  const body =
+    await readJson(request);
+
+  const caseId =
+    Number(body.case_id);
+
+  if (
+    !Number.isInteger(caseId) ||
+    caseId <= 0
+  ) {
+    return json(
+      {
+        success: false,
+        error: "شناسه پرونده نامعتبر است"
+      },
+      400
+    );
+  }
+
+  const targetCase =
+    await env.DB
+      .prepare(`
+        SELECT
+          id,
+          user_id
+        FROM cases
+        WHERE id = ?
+        LIMIT 1
+      `)
+      .bind(caseId)
+      .first();
+
+  if (!targetCase) {
+    return json(
+      {
+        success: false,
+        error: "پرونده پیدا نشد"
+      },
+      404
+    );
+  }
+
+  const attachments =
+    Array.isArray(body.attachments)
+      ? body.attachments
+      : [];
+
+  const validated =
+    validateAttachments(
+      attachments
+    );
+
+  if (!validated.ok) {
+    return json(
+      {
+        success: false,
+        error: validated.error
+      },
+      400
+    );
+  }
+
+  const existingSize =
+    await env.DB
+      .prepare(`
+        SELECT
+          COALESCE(
+            SUM(file_size),
+            0
+          ) AS total_size
+        FROM attachments
+        WHERE case_id = ?
+      `)
+      .bind(caseId)
+      .first();
+
+  const currentSize =
+    Number(
+      existingSize?.total_size || 0
+    );
+
+  const newSize =
+    validated.files.reduce(
+      (
+        total,
+        file
+      ) =>
+        total +
+        file.fileSize,
+      0
+    );
+
+  if (
+    currentSize + newSize >
+    MAX_TOTAL_FILE_SIZE
+  ) {
+    return json(
+      {
+        success: false,
+        error:
+          "حجم مجموع پیوست‌های این پرونده نباید بیشتر از ۱.۵ مگابایت باشد"
+      },
+      400
+    );
+  }
+
+  for (
+    const file of validated.files
+  ) {
+    await insertAttachment(
+      env,
+      caseId,
+      file
+    );
+  }
+
+  const fileNames =
+    validated.files
+      .map(
+        file =>
+          file.fileName
+      )
+      .join("، ");
+
+  await env.DB
+    .prepare(`
+      INSERT INTO case_events
+      (
+        case_id,
+        actor_user_id,
+        event_type,
+        description
+      )
+      VALUES (?, ?, 'attachment_added', ?)
+    `)
+    .bind(
+      caseId,
+      admin.id,
+      `مدیر پیوست جدید اضافه کرد: ${fileNames}`
+    )
+    .run();
+
+  await writeAuditLog(
+    env,
+    admin.id,
+    "add_case_attachment",
+    "case",
+    caseId,
+    JSON.stringify({
+      files:
+        validated.files.map(
+          file => ({
+            file_name:
+              file.fileName,
+            content_type:
+              file.contentType,
+            file_size:
+              file.fileSize
+          })
+        )
+    })
+  );
+
+  return json(
+    {
+      success: true,
+      message:
+        "پیوست با موفقیت به پرونده اضافه شد"
+    },
+    201
+  );
+}
+
+
+async function downloadAttachment(
+  request,
+  env,
+  attachmentId
+) {
+  const user =
+    await getAuthenticatedUser(
+      request,
+      env
+    );
+
+  if (!user) {
+    return new Response(
+      "Unauthorized",
+      {
+        status: 401
+      }
+    );
+  }
+
+  const attachment =
+    await env.DB
+      .prepare(`
+        SELECT
+          a.id,
+          a.case_id,
+          a.file_name,
+          a.content_type,
+          a.file_size,
+          a.file_data,
+          c.user_id
+        FROM attachments a
+        INNER JOIN cases c
+          ON c.id = a.case_id
+        WHERE a.id = ?
+        LIMIT 1
+      `)
+      .bind(attachmentId)
+      .first();
+
+  if (!attachment) {
+    return new Response(
+      "Attachment Not Found",
+      {
+        status: 404
+      }
+    );
+  }
+
+  if (
+    user.role !== "admin" &&
+    Number(attachment.user_id) !== Number(user.id)
+  ) {
+    return new Response(
+      "Forbidden",
+      {
+        status: 403
+      }
+    );
+  }
+
+  const parsed =
+    parseDataUrl(
+      attachment.file_data
+    );
+
+  if (!parsed) {
+    return new Response(
+      "Invalid attachment",
+      {
+        status: 500
+      }
+    );
+  }
+
+  const bytes =
+    base64ToUint8Array(
+      parsed.base64
+    );
+
+  const contentType =
+    attachment.content_type ||
+    parsed.mimeType ||
+    "application/octet-stream";
+
+  const safeFileName =
+    String(
+      attachment.file_name ||
+        "attachment"
+    ).replace(
+      /[\r\n"]/g,
+      "_"
+    );
+
+  const encodedFileName =
+    encodeURIComponent(
+      safeFileName
+    );
+
+  return new Response(
+    bytes,
+    {
+      status: 200,
+      headers: {
+        "Content-Type":
+          contentType,
+
+        "Content-Length":
+          String(bytes.length),
+
+        "Content-Disposition":
+          "inline; filename=\"attachment\"; filename*=UTF-8''" +
+          encodedFileName,
+
+        "Cache-Control":
+          "private, no-store"
+      }
+    }
+  );
+}
+
+
+// ============================================================
+// NOTIFICATIONS
 // ============================================================
 
 async function createNotification(
@@ -1758,15 +1929,11 @@ async function createNotification(
     await readJson(request);
 
   const userId =
-    Number(
-      body.user_id
-    );
+    Number(body.user_id);
 
   const caseId =
     body.case_id
-      ? Number(
-          body.case_id
-        )
+      ? Number(body.case_id)
       : null;
 
   const title =
@@ -1782,9 +1949,7 @@ async function createNotification(
     );
 
   if (
-    !Number.isInteger(
-      userId
-    ) ||
+    !Number.isInteger(userId) ||
     userId <= 0
   ) {
     return json(
@@ -1834,7 +1999,8 @@ async function createNotification(
       await env.DB
         .prepare(`
           SELECT
-            id
+            id,
+            user_id
           FROM cases
           WHERE id = ?
           LIMIT 1
@@ -1849,6 +2015,20 @@ async function createNotification(
           error: "پرونده موردنظر پیدا نشد"
         },
         404
+      );
+    }
+
+    if (
+      Number(targetCase.user_id) !==
+      userId
+    ) {
+      return json(
+        {
+          success: false,
+          error:
+            "این پرونده متعلق به این کاربر نیست"
+        },
+        400
       );
     }
   }
@@ -1889,8 +2069,7 @@ async function createNotification(
     admin.id,
     "create_notification",
     "notification",
-    result.meta?.last_row_id ||
-      null,
+    result.meta?.last_row_id || null,
     JSON.stringify({
       user_id: userId,
       case_id: caseId
@@ -1907,10 +2086,6 @@ async function createNotification(
   );
 }
 
-
-// ============================================================
-// NOTIFICATIONS - USER
-// ============================================================
 
 async function listNotifications(
   request,
@@ -2003,8 +2178,8 @@ async function updateNotification(
   }
 
   if (
-    user.role !== "admin" &&
-    item.user_id !== user.id
+    Number(item.user_id) !==
+    Number(user.id)
   ) {
     return json(
       {
@@ -2021,7 +2196,6 @@ async function updateNotification(
   const changes = [];
 
   if (
-    user.role !== "admin" &&
     body.viewed === true &&
     item.is_viewed !== 1
   ) {
@@ -2036,13 +2210,10 @@ async function updateNotification(
       .bind(notificationId)
       .run();
 
-    changes.push(
-      "viewed"
-    );
+    changes.push("viewed");
   }
 
   if (
-    user.role !== "admin" &&
     body.confirmed === true &&
     item.is_confirmed !== 1
   ) {
@@ -2062,9 +2233,7 @@ async function updateNotification(
       .bind(notificationId)
       .run();
 
-    changes.push(
-      "confirmed"
-    );
+    changes.push("confirmed");
   }
 
   return json({
@@ -2075,7 +2244,7 @@ async function updateNotification(
 
 
 // ============================================================
-// ADMIN AUDIT LOGS
+// AUDIT LOG
 // ============================================================
 
 async function getAuditLogs(
@@ -2152,6 +2321,231 @@ async function writeAuditLog(
 
 
 // ============================================================
+// ATTACHMENT HELPERS
+// ============================================================
+
+function validateAttachments(
+  attachments
+) {
+  if (
+    !Array.isArray(attachments)
+  ) {
+    return {
+      ok: true,
+      files: []
+    };
+  }
+
+  if (
+    attachments.length >
+    MAX_ATTACHMENTS
+  ) {
+    return {
+      ok: false,
+      error:
+        "حداکثر ۵ فایل را می‌توانید پیوست کنید"
+    };
+  }
+
+  let totalSize = 0;
+  const files = [];
+
+  for (
+    const file of attachments
+  ) {
+    const fileName =
+      cleanText(
+        file?.file_name,
+        200
+      );
+
+    const contentType =
+      cleanText(
+        file?.content_type,
+        100
+      );
+
+    const fileSize =
+      Number(
+        file?.file_size
+      );
+
+    const fileData =
+      typeof file?.file_data === "string"
+        ? file.file_data
+        : "";
+
+    if (
+      !fileName ||
+      !contentType ||
+      !Number.isInteger(fileSize) ||
+      fileSize < 0 ||
+      !fileData
+    ) {
+      return {
+        ok: false,
+        error:
+          "اطلاعات یکی از فایل‌های پیوست نامعتبر است"
+      };
+    }
+
+    if (
+      fileSize >
+      MAX_FILE_SIZE
+    ) {
+      return {
+        ok: false,
+        error:
+          "حجم هر فایل نباید بیشتر از ۵۰۰ کیلوبایت باشد"
+      };
+    }
+
+    totalSize += fileSize;
+
+    if (
+      totalSize >
+      MAX_TOTAL_FILE_SIZE
+    ) {
+      return {
+        ok: false,
+        error:
+          "حجم مجموع فایل‌ها نباید بیشتر از ۱.۵ مگابایت باشد"
+      };
+    }
+
+    if (
+      fileData.length >
+      MAX_FILE_DATA_LENGTH
+    ) {
+      return {
+        ok: false,
+        error:
+          "داده یکی از فایل‌ها بیش از حد مجاز است"
+      };
+    }
+
+    if (
+      !fileData.startsWith("data:")
+    ) {
+      return {
+        ok: false,
+        error:
+          "فرمت یکی از فایل‌های پیوست نامعتبر است"
+      };
+    }
+
+    files.push({
+      fileName,
+      contentType,
+      fileSize,
+      fileData
+    });
+  }
+
+  return {
+    ok: true,
+    files
+  };
+}
+
+
+async function insertAttachment(
+  env,
+  caseId,
+  file
+) {
+  await env.DB
+    .prepare(`
+      INSERT INTO attachments
+      (
+        case_id,
+        file_name,
+        content_type,
+        file_size,
+        file_data
+      )
+      VALUES (?, ?, ?, ?, ?)
+    `)
+    .bind(
+      caseId,
+      file.fileName,
+      file.contentType,
+      file.fileSize,
+      file.fileData
+    )
+    .run();
+}
+
+
+function parseDataUrl(
+  dataUrl
+) {
+  if (
+    typeof dataUrl !== "string" ||
+    !dataUrl.startsWith("data:")
+  ) {
+    return null;
+  }
+
+  const commaIndex =
+    dataUrl.indexOf(",");
+
+  if (commaIndex === -1) {
+    return null;
+  }
+
+  const metadata =
+    dataUrl.slice(
+      5,
+      commaIndex
+    );
+
+  const base64 =
+    dataUrl.slice(
+      commaIndex + 1
+    );
+
+  if (
+    !metadata.includes(";base64") ||
+    !base64
+  ) {
+    return null;
+  }
+
+  return {
+    mimeType:
+      metadata.split(";")[0] ||
+      "application/octet-stream",
+    base64
+  };
+}
+
+
+function base64ToUint8Array(
+  base64
+) {
+  const binary =
+    atob(base64);
+
+  const bytes =
+    new Uint8Array(
+      binary.length
+    );
+
+  for (
+    let i = 0;
+    i < binary.length;
+    i++
+  ) {
+    bytes[i] =
+      binary.charCodeAt(i);
+  }
+
+  return bytes;
+}
+
+
+// ============================================================
 // AUTHORIZATION
 // ============================================================
 
@@ -2195,9 +2589,7 @@ async function createSession(
     );
 
   const tokenHash =
-    await sha256Base64Url(
-      token
-    );
+    await sha256Base64Url(token);
 
   const expiresDate =
     new Date(
@@ -2241,18 +2633,14 @@ async function getAuthenticatedUser(
   env
 ) {
   const token =
-    getSessionToken(
-      request
-    );
+    getSessionToken(request);
 
   if (!token) {
     return null;
   }
 
   const tokenHash =
-    await sha256Base64Url(
-      token
-    );
+    await sha256Base64Url(token);
 
   const session =
     await env.DB
@@ -2320,180 +2708,101 @@ async function generateTrackingCode(
   env,
   complainantType
 ) {
+  const now =
+    new Date();
+
+  const persianYear =
+    getCalendarPart(
+      now,
+      "en-US-u-ca-persian",
+      "year",
+      "Asia/Tehran"
+    );
+
+  const gregorianMonth =
+    getCalendarPart(
+      now,
+      "en-US",
+      "month",
+      "Asia/Tehran"
+    );
+
+  const islamicDay =
+    getCalendarPart(
+      now,
+      "en-US-u-ca-islamic",
+      "day",
+      "Asia/Tehran"
+    );
+
+  const gregorianYear =
+    getCalendarPart(
+      now,
+      "en-US",
+      "year",
+      "Asia/Tehran"
+    );
+
+  const hour =
+    getCalendarPart(
+      now,
+      "en-US",
+      "hour",
+      "Asia/Tehran"
+    );
+
+  const typeCode =
+    complainantType === "other"
+      ? "2"
+      : "1";
+
+  const base =
+    normalizeDigits(
+      `${persianYear}${gregorianMonth}${islamicDay}${gregorianYear}${hour}`
+    );
+
+  const preferred =
+    `${base}${typeCode}`;
+
+  const exists =
+    await env.DB
+      .prepare(`
+        SELECT id
+        FROM cases
+        WHERE tracking_code = ?
+        LIMIT 1
+      `)
+      .bind(preferred)
+      .first();
+
+  if (!exists) {
+    return preferred;
+  }
+
   /*
-    ساختار دقیق کد:
-
-    سال شمسی
-    + ماه میلادی
-    + روز قمری
-    + سال میلادی
-    + ساعت
-    + نوع شکایت
-
-    مثال:
-
-    ۱۴۰۵۱۰۰۲۲۰۲۶۱۴۲
-
-    ۱۴۰۵ = سال شمسی
-    ۱۰   = ماه میلادی
-    ۰۲   = روز قمری
-    ۲۰۲۶ = سال میلادی
-    ۱۴   = ساعت
-    ۲    = نوع شکایت
+    ساختار اصلی کد حفظ می‌شود.
+    در صورت ثبت چند پرونده در یک ساعت،
+    رقم انتهایی برای جلوگیری از collision
+    تغییر می‌کند.
   */
 
-  for (
-    let attempt = 0;
-    attempt < 20;
-    attempt++
-  ) {
-    const now =
-      new Date();
+  for (let suffix = 0; suffix <= 9; suffix++) {
+    const candidate =
+      `${base}${suffix}`;
 
-    const persianYear =
-      getCalendarPart(
-        now,
-        "en-US-u-ca-persian",
-        "year",
-        "Asia/Tehran"
-      );
-
-    const gregorianMonth =
-      getCalendarPart(
-        now,
-        "en-US",
-        "month",
-        "Asia/Tehran"
-      );
-
-    const islamicDay =
-      getCalendarPart(
-        now,
-        "en-US-u-ca-islamic",
-        "day",
-        "Asia/Tehran"
-      );
-
-    const gregorianYear =
-      getCalendarPart(
-        now,
-        "en-US",
-        "year",
-        "Asia/Tehran"
-      );
-
-    const hour =
-      getCalendarPart(
-        now,
-        "en-US",
-        "hour",
-        "Asia/Tehran"
-      );
-
-    /*
-      نوع:
-      ۱ = برای خودم
-      ۲ = برای شخص دیگر
-    */
-    const typeCode =
-      complainantType === "other"
-        ? "2"
-        : "1";
-
-    const raw =
-      `${persianYear}` +
-      `${gregorianMonth}` +
-      `${islamicDay}` +
-      `${gregorianYear}` +
-      `${hour}` +
-      `${typeCode}`;
-
-    const code =
-      normalizeDigits(
-        raw
-      );
-
-    const exists =
+    const candidateExists =
       await env.DB
         .prepare(`
-          SELECT
-            id
+          SELECT id
           FROM cases
           WHERE tracking_code = ?
           LIMIT 1
         `)
-        .bind(code)
+        .bind(candidate)
         .first();
 
-    if (!exists) {
-      return code;
-    }
-
-    /*
-      اگر در یک ساعت، یک کد کاملاً مشابه
-      از قبل وجود داشته باشد، برای جلوگیری
-      از برخورد، یک شناسه‌ی کوتاه از
-      شناسه‌های موجود استفاده می‌کنیم.
-    */
-
-    const countResult =
-      await env.DB
-        .prepare(`
-          SELECT COUNT(*) AS total
-          FROM cases
-          WHERE tracking_code LIKE ?
-        `)
-        .bind(
-          `${code.slice(
-            0,
-            -1
-          )}%`
-        )
-        .first();
-
-    const nextNumber =
-      Number(
-        countResult?.total || 0
-      ) + 1;
-
-    const suffix =
-      String(
-        nextNumber % 10
-      );
-
-    /*
-      توجه:
-      ساختار اصلی کد همان ساختار ۱۵ رقمی
-      باقی می‌ماند؛ برای برخورد احتمالی،
-      رقم نوع در صورت نیاز تغییر می‌کند.
-    */
-
-    const fallbackCode =
-      normalizeDigits(
-        `${persianYear}` +
-        `${gregorianMonth}` +
-        `${islamicDay}` +
-        `${gregorianYear}` +
-        `${hour}` +
-        `${suffix}`
-      );
-
-    const fallbackExists =
-      await env.DB
-        .prepare(`
-          SELECT
-            id
-          FROM cases
-          WHERE tracking_code = ?
-          LIMIT 1
-        `)
-        .bind(
-          fallbackCode
-        )
-        .first();
-
-    if (!fallbackExists) {
-      return fallbackCode;
+    if (!candidateExists) {
+      return candidate;
     }
   }
 
@@ -2507,24 +2816,37 @@ function getCalendarPart(
   date,
   calendar,
   part,
-  timeZone = "Asia/Tehran"
+  timeZone
 ) {
   const formatter =
     new Intl.DateTimeFormat(
       calendar,
       {
         timeZone,
-        [part]: "2-digit"
+        [part]:
+          part === "year"
+            ? "numeric"
+            : "2-digit"
       }
     );
 
-  return formatter
-    .formatToParts(date)
-    .find(
-      x =>
-        x.type === part
-    )
-    ?.value || "";
+  const value =
+    formatter
+      .formatToParts(date)
+      .find(
+        item =>
+          item.type === part
+      )
+      ?.value || "";
+
+  return normalizeDigits(
+    value
+  ).padStart(
+    part === "year"
+      ? 4
+      : 2,
+    "0"
+  );
 }
 
 
@@ -2543,9 +2865,7 @@ async function hashPassword(
   const keyMaterial =
     await crypto.subtle.importKey(
       "raw",
-      encoder.encode(
-        password
-      ),
+      encoder.encode(password),
       "PBKDF2",
       false,
       ["deriveBits"]
@@ -2594,9 +2914,7 @@ async function verifyPassword(
     const keyMaterial =
       await crypto.subtle.importKey(
         "raw",
-        encoder.encode(
-          password
-        ),
+        encoder.encode(password),
         "PBKDF2",
         false,
         ["deriveBits"]
@@ -2646,9 +2964,7 @@ async function sha256Base64Url(
   const digest =
     await crypto.subtle.digest(
       "SHA-256",
-      encoder.encode(
-        value
-      )
+      encoder.encode(value)
     );
 
   return bytesToBase64Url(
@@ -2664,8 +2980,7 @@ function constantTimeEqual(
   b
 ) {
   if (
-    a.length !==
-    b.length
+    a.length !== b.length
   ) {
     return false;
   }
@@ -2694,26 +3009,13 @@ function bytesToBase64Url(
     const byte of bytes
   ) {
     binary +=
-      String.fromCharCode(
-        byte
-      );
+      String.fromCharCode(byte);
   }
 
-  return btoa(
-    binary
-  )
-    .replace(
-      /\+/g,
-      "-"
-    )
-    .replace(
-      /\//g,
-      "_"
-    )
-    .replace(
-      /=+$/,
-      ""
-    );
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 
@@ -2722,14 +3024,8 @@ function base64UrlToBytes(
 ) {
   const base64 =
     value
-      .replace(
-        /-/g,
-        "+"
-      )
-      .replace(
-        /_/g,
-        "/"
-      );
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
 
   const padded =
     base64 +
@@ -2740,9 +3036,7 @@ function base64UrlToBytes(
     );
 
   const binary =
-    atob(
-      padded
-    );
+    atob(padded);
 
   const bytes =
     new Uint8Array(
@@ -2755,9 +3049,7 @@ function base64UrlToBytes(
     i++
   ) {
     bytes[i] =
-      binary.charCodeAt(
-        i
-      );
+      binary.charCodeAt(i);
   }
 
   return bytes;
@@ -2777,9 +3069,7 @@ function normalizePhone(
     ).trim();
 
   phone =
-    normalizeDigits(
-      phone
-    );
+    normalizeDigits(phone);
 
   phone =
     phone.replace(
@@ -2788,9 +3078,7 @@ function normalizePhone(
     );
 
   if (
-    phone.startsWith(
-      "+98"
-    )
+    phone.startsWith("+98")
   ) {
     phone =
       "0" +
@@ -2798,9 +3086,7 @@ function normalizePhone(
   }
 
   if (
-    phone.startsWith(
-      "0098"
-    )
+    phone.startsWith("0098")
   ) {
     phone =
       "0" +
@@ -2827,18 +3113,14 @@ function normalizeDigits(
       /[۰-۹]/g,
       char =>
         String(
-          persian.indexOf(
-            char
-          )
+          persian.indexOf(char)
         )
     )
     .replace(
       /[٠-٩]/g,
       char =>
         String(
-          arabic.indexOf(
-            char
-          )
+          arabic.indexOf(char)
         )
     );
 }
@@ -2910,17 +3192,12 @@ function getSessionToken(
 
     const name =
       part
-        .slice(
-          0,
-          index
-        )
+        .slice(0, index)
         .trim();
 
     const value =
       part
-        .slice(
-          index + 1
-        )
+        .slice(index + 1)
         .trim();
 
     cookies[name] =
@@ -2972,12 +3249,9 @@ function statusLabel(
 ) {
   const labels = {
     new: "جدید",
-    under_review:
-      "در حال بررسی",
-    answered:
-      "پاسخ داده شده",
-    closed:
-      "بسته شده"
+    under_review: "در حال بررسی",
+    answered: "پاسخ داده شده",
+    closed: "بسته شده"
   };
 
   return (
@@ -3024,12 +3298,10 @@ function json(
   }
 
   return new Response(
-    JSON.stringify(
-      data
-    ),
+    JSON.stringify(data),
     {
       status,
       headers
     }
   );
-      }
+}
