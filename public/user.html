@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>داشبورد | سامانه مدیریت شکایات</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+
+    <a href="/user.html" class="brand">
+      <span class="brand-icon">⚖</span>
+      <span>سامانه مدیریت شکایات</span>
+    </a>
+
+    <div class="header-actions">
+      <button id="themeToggle" class="icon-btn" type="button">☀️</button>
+
+      <button id="logoutButton" class="btn btn-secondary" type="button">
+        خروج
+      </button>
+    </div>
+
+  </div>
+</header>
+
+<main class="dashboard-main">
+
+  <div class="container">
+
+    <section class="dashboard-welcome">
+
+      <div>
+        <span class="eyebrow">حساب کاربری</span>
+
+        <h1>
+          سلام،
+          <span id="userName">کاربر</span> 👋
+        </h1>
+
+        <p>
+          از اینجا می‌توانید شکایت‌های خود را ثبت و پیگیری کنید.
+        </p>
+      </div>
+
+      <a href="/complaint.html" class="btn btn-primary btn-large">
+        + ثبت شکایت جدید
+      </a>
+
+    </section>
+
+    <div
+      id="dashboardMessage"
+      class="auth-message"
+      hidden
+    ></div>
+
+    <!-- Statistics -->
+
+    <section class="dashboard-stats">
+
+      <div class="dashboard-stat">
+        <span class="stat-icon">📋</span>
+        <div>
+          <small>کل شکایت‌ها</small>
+          <strong id="totalCases">۰</strong>
+        </div>
+      </div>
+
+      <div class="dashboard-stat">
+        <span class="stat-icon">🕐</span>
+        <div>
+          <small>در حال بررسی</small>
+          <strong id="reviewCases">۰</strong>
+        </div>
+      </div>
+
+      <div class="dashboard-stat">
+        <span class="stat-icon">💬</span>
+        <div>
+          <small>پاسخ داده‌شده</small>
+          <strong id="answeredCases">۰</strong>
+        </div>
+      </div>
+
+      <div class="dashboard-stat">
+        <span class="stat-icon">🔔</span>
+        <div>
+          <small>اعلان‌های جدید</small>
+          <strong id="unreadNotifications">۰</strong>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Cases -->
+
+    <section class="dashboard-section">
+
+      <div class="section-heading-inline">
+
+        <div>
+          <span class="eyebrow">پرونده‌ها</span>
+          <h2>شکایت‌های من</h2>
+        </div>
+
+        <a href="/complaint.html" class="btn btn-secondary">
+          ثبت شکایت
+        </a>
+
+      </div>
+
+      <div id="casesContainer" class="cases-list">
+
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <h3>در حال دریافت پرونده‌ها...</h3>
+          <p>
+            لطفاً چند لحظه صبر کنید.
+          </p>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- Notifications -->
+
+    <section class="dashboard-section">
+
+      <div class="section-heading-inline">
+
+        <div>
+          <span class="eyebrow">اطلاع‌رسانی</span>
+          <h2>ابلاغیه‌ها و پیام‌ها</h2>
+        </div>
+
+      </div>
+
+      <div id="notificationsContainer" class="notifications-list">
+
+        <div class="empty-state">
+          <div class="empty-icon">🔔</div>
+          <h3>در حال دریافت اعلان‌ها...</h3>
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>© ۱۴۰۵ سامانه مدیریت شکایات</span>
+    <span>پنل کاربری</span>
+  </div>
+</footer>
+
+<script src="/js/app.js"></script>
+<script src="/js/user.js"></script>
+
+</body>
+</html>
