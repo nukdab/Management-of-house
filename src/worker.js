@@ -1,7 +1,13 @@
 const SESSION_DAYS = 30;
 const PASSWORD_ITERATIONS = 120000;
+
 const MAX_DESCRIPTION = 10000;
 const MAX_TEXT = 500;
+
+const MAX_ATTACHMENTS = 5;
+const MAX_FILE_SIZE = 500 * 1024;
+const MAX_TOTAL_FILE_SIZE = 1500 * 1024;
+const MAX_FILE_DATA_LENGTH = 750000;
 
 const encoder = new TextEncoder();
 
@@ -10,7 +16,14 @@ export default {
     const url = new URL(request.url);
 
     try {
-      if (url.pathname === "/api/test-db" && request.method === "GET") {
+      // ======================================================
+      // TEST DATABASE
+      // ======================================================
+
+      if (
+        url.pathname === "/api/test-db" &&
+        request.method === "GET"
+      ) {
         const result = await env.DB
           .prepare("SELECT 1 AS connected")
           .first();
@@ -21,54 +34,106 @@ export default {
         });
       }
 
+      // ======================================================
+      // AUTH
+      // ======================================================
+
       if (url.pathname.startsWith("/api/auth/")) {
         return await handleAuth(request, env, url);
       }
+
+      // ======================================================
+      // ADMIN BOOTSTRAP
+      // ======================================================
 
       if (url.pathname === "/api/admin/bootstrap") {
         return await handleAdminBootstrap(request, env);
       }
 
-      if (url.pathname === "/api/cases" && request.method === "GET") {
+      // ======================================================
+      // USER CASES
+      // ======================================================
+
+      if (
+        url.pathname === "/api/cases" &&
+        request.method === "GET"
+      ) {
         return await listCases(request, env);
       }
 
-      if (url.pathname === "/api/cases" && request.method === "POST") {
+      if (
+        url.pathname === "/api/cases" &&
+        request.method === "POST"
+      ) {
         return await createCase(request, env);
       }
 
-      const caseMatch = url.pathname.match(/^\/api\/cases\/(\d+)$/);
+      const caseMatch =
+        url.pathname.match(/^\/api\/cases\/(\d+)$/);
 
       if (caseMatch) {
         const caseId = Number(caseMatch[1]);
 
         if (request.method === "GET") {
-          return await getCase(request, env, caseId);
+          return await getCase(
+            request,
+            env,
+            caseId
+          );
         }
 
         if (request.method === "PATCH") {
-          return await updateCase(request, env, caseId);
+          return await updateCase(
+            request,
+            env,
+            caseId
+          );
         }
       }
 
-      const eventsMatch =
-        url.pathname.match(/^\/api\/cases\/(\d+)\/events$/);
+      // ======================================================
+      // CASE EVENTS
+      // ======================================================
 
-      if (eventsMatch && request.method === "GET") {
-        return await getCaseEvents(request, env, Number(eventsMatch[1]));
+      const eventsMatch =
+        url.pathname.match(
+          /^\/api\/cases\/(\d+)\/events$/
+        );
+
+      if (
+        eventsMatch &&
+        request.method === "GET"
+      ) {
+        return await getCaseEvents(
+          request,
+          env,
+          Number(eventsMatch[1])
+        );
       }
+
+      // ======================================================
+      // NOTIFICATIONS
+      // ======================================================
 
       if (
         url.pathname === "/api/notifications" &&
         request.method === "GET"
       ) {
-        return await listNotifications(request, env);
+        return await listNotifications(
+          request,
+          env
+        );
       }
 
       const notificationMatch =
-        url.pathname.match(/^\/api\/notifications\/(\d+)$/);
+        url.pathname.match(
+          /^\/api\/notifications\/(\d+)$/
+        );
 
-      if (notificationMatch && request.method === "PATCH") {
+      if (
+        notificationMatch &&
+        request.method === "PATCH"
+      ) {
         return await updateNotification(
           request,
           env,
@@ -76,26 +141,51 @@ export default {
         );
       }
 
+      // ======================================================
+      // ADMIN CASES
+      // ======================================================
+
       if (
         url.pathname === "/api/admin/cases" &&
         request.method === "GET"
       ) {
-        return await adminListCases(request, env);
+        return await adminListCases(
+          request,
+          env
+        );
       }
+
+      // ======================================================
+      // ADMIN NOTIFICATIONS
+      // ======================================================
 
       if (
         url.pathname === "/api/admin/notifications" &&
         request.method === "POST"
       ) {
-        return await createNotification(request, env);
+        return await createNotification(
+          request,
+          env
+        );
       }
+
+      // ======================================================
+      // ADMIN AUDIT LOGS
+      // ======================================================
 
       if (
         url.pathname === "/api/admin/audit-logs" &&
         request.method === "GET"
       ) {
-        return await getAuditLogs(request, env);
+        return await getAuditLogs(
+          request,
+          env
+        );
       }
+
+      // ======================================================
+      // STATIC ASSETS
+      // ======================================================
 
       return env.ASSETS.fetch(request);
 
@@ -118,33 +208,49 @@ export default {
 // AUTH
 // ============================================================
 
-async function handleAuth(request, env, url) {
+async function handleAuth(
+  request,
+  env,
+  url
+) {
   if (
     url.pathname === "/api/auth/register" &&
     request.method === "POST"
   ) {
-    return register(request, env);
+    return await register(
+      request,
+      env
+    );
   }
 
   if (
     url.pathname === "/api/auth/login" &&
     request.method === "POST"
   ) {
-    return login(request, env);
+    return await login(
+      request,
+      env
+    );
   }
 
   if (
     url.pathname === "/api/auth/logout" &&
     request.method === "POST"
   ) {
-    return logout(request, env);
+    return await logout(
+      request,
+      env
+    );
   }
 
   if (
     url.pathname === "/api/auth/me" &&
     request.method === "GET"
   ) {
-    return getCurrentUser(request, env);
+    return await getCurrentUser(
+      request,
+      env
+    );
   }
 
   return json(
@@ -157,87 +263,136 @@ async function handleAuth(request, env, url) {
 }
 
 
-async function register(request, env) {
-  const body = await readJson(request);
+async function register(
+  request,
+  env
+) {
+  const body =
+    await readJson(request);
 
-  const fullName = cleanText(body.full_name, 100);
-  const phone = normalizePhone(body.phone);
-  const password = String(body.password || "");
+  const fullName =
+    cleanText(
+      body.full_name,
+      100
+    );
+
+  const phone =
+    normalizePhone(
+      body.phone
+    );
+
+  const password =
+    String(
+      body.password || ""
+    );
 
   if (!fullName) {
-    return json({
-      success: false,
-      error: "نام و نام خانوادگی الزامی است"
-    }, 400);
+    return json(
+      {
+        success: false,
+        error: "نام و نام خانوادگی الزامی است"
+      },
+      400
+    );
   }
 
   if (!isValidPhone(phone)) {
-    return json({
-      success: false,
-      error: "شماره تلفن معتبر نیست"
-    }, 400);
+    return json(
+      {
+        success: false,
+        error: "شماره تلفن معتبر نیست"
+      },
+      400
+    );
   }
 
   if (password.length < 8) {
-    return json({
-      success: false,
-      error: "رمز عبور باید حداقل ۸ کاراکتر باشد"
-    }, 400);
+    return json(
+      {
+        success: false,
+        error: "رمز عبور باید حداقل ۸ کاراکتر باشد"
+      },
+      400
+    );
   }
 
-  const existing = await env.DB
-    .prepare("SELECT id FROM users WHERE phone = ? LIMIT 1")
-    .bind(phone)
-    .first();
+  const existing =
+    await env.DB
+      .prepare(
+        "SELECT id FROM users WHERE phone = ? LIMIT 1"
+      )
+      .bind(phone)
+      .first();
 
   if (existing) {
-    return json({
-      success: false,
-      error: "این شماره تلفن قبلاً ثبت شده است"
-    }, 409);
+    return json(
+      {
+        success: false,
+        error: "این شماره تلفن قبلاً ثبت شده است"
+      },
+      409
+    );
   }
 
-  const passwordData = await hashPassword(password);
+  const passwordData =
+    await hashPassword(
+      password
+    );
 
-  const result = await env.DB
-    .prepare(`
-      INSERT INTO users
-      (
-        full_name,
+  const result =
+    await env.DB
+      .prepare(`
+        INSERT INTO users
+        (
+          full_name,
+          phone,
+          password_hash,
+          password_salt,
+          role,
+          is_active
+        )
+        VALUES (?, ?, ?, ?, 'user', 1)
+      `)
+      .bind(
+        fullName,
         phone,
-        password_hash,
-        password_salt,
-        role,
-        is_active
+        passwordData.hash,
+        passwordData.salt
       )
-      VALUES (?, ?, ?, ?, 'user', 1)
-    `)
-    .bind(
-      fullName,
-      phone,
-      passwordData.hash,
-      passwordData.salt
-    )
-    .run();
+      .run();
 
   if (!result.success) {
-    return json({
-      success: false,
-      error: "ساخت حساب انجام نشد"
-    }, 500);
+    return json(
+      {
+        success: false,
+        error: "ساخت حساب انجام نشد"
+      },
+      500
+    );
   }
 
-  const user = await env.DB
-    .prepare(`
-      SELECT id, full_name, phone, role, is_active, created_at
-      FROM users
-      WHERE phone = ?
-      LIMIT 1
-    `)
-    .bind(phone)
-    .first();
+  const user =
+    await env.DB
+      .prepare(`
+        SELECT
+          id,
+          full_name,
+          phone,
+          role,
+          is_active,
+          created_at
+        FROM users
+        WHERE phone = ?
+        LIMIT 1
+      `)
+      .bind(phone)
+      .first();
 
-  const session = await createSession(env, user.id);
+  const session =
+    await createSession(
+      env,
+      user.id
+    );
 
   return json(
     {
@@ -252,67 +407,100 @@ async function register(request, env) {
     },
     201,
     {
-      "Set-Cookie": buildSessionCookie(
-        session.token,
-        session.expires
-      )
+      "Set-Cookie":
+        buildSessionCookie(
+          session.token,
+          session.expires
+        )
     }
   );
 }
 
 
-async function login(request, env) {
-  const body = await readJson(request);
+async function login(
+  request,
+  env
+) {
+  const body =
+    await readJson(request);
 
-  const phone = normalizePhone(body.phone);
-  const password = String(body.password || "");
+  const phone =
+    normalizePhone(
+      body.phone
+    );
 
-  if (!isValidPhone(phone) || !password) {
-    return json({
-      success: false,
-      error: "شماره تلفن یا رمز عبور نادرست است"
-    }, 401);
+  const password =
+    String(
+      body.password || ""
+    );
+
+  if (
+    !isValidPhone(phone) ||
+    !password
+  ) {
+    return json(
+      {
+        success: false,
+        error: "شماره تلفن یا رمز عبور نادرست است"
+      },
+      401
+    );
   }
 
-  const user = await env.DB
-    .prepare(`
-      SELECT
-        id,
-        full_name,
-        phone,
-        password_hash,
-        password_salt,
-        role,
-        is_active,
-        created_at
-      FROM users
-      WHERE phone = ?
-      LIMIT 1
-    `)
-    .bind(phone)
-    .first();
+  const user =
+    await env.DB
+      .prepare(`
+        SELECT
+          id,
+          full_name,
+          phone,
+          password_hash,
+          password_salt,
+          role,
+          is_active,
+          created_at
+        FROM users
+        WHERE phone = ?
+        LIMIT 1
+      `)
+      .bind(phone)
+      .first();
 
-  if (!user || user.is_active !== 1) {
-    return json({
-      success: false,
-      error: "شماره تلفن یا رمز عبور نادرست است"
-    }, 401);
+  if (
+    !user ||
+    user.is_active !== 1
+  ) {
+    return json(
+      {
+        success: false,
+        error: "شماره تلفن یا رمز عبور نادرست است"
+      },
+      401
+    );
   }
 
-  const validPassword = await verifyPassword(
-    password,
-    user.password_hash,
-    user.password_salt
-  );
+  const validPassword =
+    await verifyPassword(
+      password,
+      user.password_hash,
+      user.password_salt
+    );
 
   if (!validPassword) {
-    return json({
-      success: false,
-      error: "شماره تلفن یا رمز عبور نادرست است"
-    }, 401);
+    return json(
+      {
+        success: false,
+        error: "شماره تلفن یا رمز عبور نادرست است"
+      },
+      401
+    );
   }
 
-  const session = await createSession(env, user.id);
+  const session =
+    await createSession(
+      env,
+      user.id
+    );
 
   return json(
     {
@@ -327,20 +515,28 @@ async function login(request, env) {
     },
     200,
     {
-      "Set-Cookie": buildSessionCookie(
-        session.token,
-        session.expires
-      )
+      "Set-Cookie":
+        buildSessionCookie(
+          session.token,
+          session.expires
+        )
     }
   );
 }
 
 
-async function logout(request, env) {
-  const token = getSessionToken(request);
+async function logout(
+  request,
+  env
+) {
+  const token =
+    getSessionToken(request);
 
   if (token) {
-    const tokenHash = await sha256Base64Url(token);
+    const tokenHash =
+      await sha256Base64Url(
+        token
+      );
 
     await env.DB
       .prepare(
@@ -357,23 +553,31 @@ async function logout(request, env) {
     },
     200,
     {
-      "Set-Cookie": clearSessionCookie()
+      "Set-Cookie":
+        clearSessionCookie()
     }
   );
 }
 
 
-async function getCurrentUser(request, env) {
-  const user = await getAuthenticatedUser(
-    request,
-    env
-  );
+async function getCurrentUser(
+  request,
+  env
+) {
+  const user =
+    await getAuthenticatedUser(
+      request,
+      env
+    );
 
   if (!user) {
-    return json({
-      success: false,
-      authenticated: false
-    }, 401);
+    return json(
+      {
+        success: false,
+        authenticated: false
+      },
+      401
+    );
   }
 
   return json({
@@ -394,131 +598,179 @@ async function getCurrentUser(request, env) {
 // ADMIN BOOTSTRAP
 // ============================================================
 
-async function handleAdminBootstrap(request, env) {
+async function handleAdminBootstrap(
+  request,
+  env
+) {
   if (request.method !== "POST") {
-    return json({
-      success: false,
-      error: "Method Not Allowed"
-    }, 405);
+    return json(
+      {
+        success: false,
+        error: "Method Not Allowed"
+      },
+      405
+    );
   }
 
   if (!env.ADMIN_SETUP_KEY) {
-    return json({
-      success: false,
-      error: "ADMIN_SETUP_KEY تنظیم نشده است"
-    }, 500);
+    return json(
+      {
+        success: false,
+        error: "ADMIN_SETUP_KEY تنظیم نشده است"
+      },
+      500
+    );
   }
 
   const setupKey =
-    request.headers.get("X-Setup-Key");
+    request.headers.get(
+      "X-Setup-Key"
+    );
 
   if (
     !setupKey ||
     setupKey !== env.ADMIN_SETUP_KEY
   ) {
-    return json({
-      success: false,
-      error: "کلید دسترسی نامعتبر است"
-    }, 403);
+    return json(
+      {
+        success: false,
+        error: "کلید دسترسی نامعتبر است"
+      },
+      403
+    );
   }
 
-  const existingAdmin = await env.DB
-    .prepare(`
-      SELECT id
-      FROM users
-      WHERE role = 'admin'
-      LIMIT 1
-    `)
-    .first();
+  const existingAdmin =
+    await env.DB
+      .prepare(`
+        SELECT id
+        FROM users
+        WHERE role = 'admin'
+        LIMIT 1
+      `)
+      .first();
 
   if (existingAdmin) {
-    return json({
-      success: false,
-      error: "حساب ادمین قبلاً ساخته شده است"
-    }, 409);
+    return json(
+      {
+        success: false,
+        error: "حساب ادمین قبلاً ساخته شده است"
+      },
+      409
+    );
   }
 
-  const body = await readJson(request);
+  const body =
+    await readJson(request);
 
   const fullName =
-    cleanText(body.full_name, 100);
+    cleanText(
+      body.full_name,
+      100
+    );
 
   const phone =
-    normalizePhone(body.phone);
+    normalizePhone(
+      body.phone
+    );
 
   const password =
-    String(body.password || "");
+    String(
+      body.password || ""
+    );
 
   if (!fullName) {
-    return json({
-      success: false,
-      error: "نام و نام خانوادگی الزامی است"
-    }, 400);
+    return json(
+      {
+        success: false,
+        error: "نام و نام خانوادگی الزامی است"
+      },
+      400
+    );
   }
 
   if (!isValidPhone(phone)) {
-    return json({
-      success: false,
-      error: "شماره تلفن معتبر نیست"
-    }, 400);
+    return json(
+      {
+        success: false,
+        error: "شماره تلفن معتبر نیست"
+      },
+      400
+    );
   }
 
   if (password.length < 8) {
-    return json({
-      success: false,
-      error: "رمز عبور باید حداقل ۸ کاراکتر باشد"
-    }, 400);
+    return json(
+      {
+        success: false,
+        error: "رمز عبور باید حداقل ۸ کاراکتر باشد"
+      },
+      400
+    );
   }
 
-  const existingUser = await env.DB
-    .prepare(
-      "SELECT id FROM users WHERE phone = ? LIMIT 1"
-    )
-    .bind(phone)
-    .first();
+  const existingUser =
+    await env.DB
+      .prepare(
+        "SELECT id FROM users WHERE phone = ? LIMIT 1"
+      )
+      .bind(phone)
+      .first();
 
   if (existingUser) {
-    return json({
-      success: false,
-      error: "این شماره تلفن قبلاً در سیستم وجود دارد"
-    }, 409);
+    return json(
+      {
+        success: false,
+        error: "این شماره تلفن قبلاً در سیستم وجود دارد"
+      },
+      409
+    );
   }
 
   const passwordData =
-    await hashPassword(password);
+    await hashPassword(
+      password
+    );
 
-  const result = await env.DB
-    .prepare(`
-      INSERT INTO users
-      (
-        full_name,
+  const result =
+    await env.DB
+      .prepare(`
+        INSERT INTO users
+        (
+          full_name,
+          phone,
+          password_hash,
+          password_salt,
+          role,
+          is_active
+        )
+        VALUES (?, ?, ?, ?, 'admin', 1)
+      `)
+      .bind(
+        fullName,
         phone,
-        password_hash,
-        password_salt,
-        role,
-        is_active
+        passwordData.hash,
+        passwordData.salt
       )
-      VALUES (?, ?, ?, ?, 'admin', 1)
-    `)
-    .bind(
-      fullName,
-      phone,
-      passwordData.hash,
-      passwordData.salt
-    )
-    .run();
+      .run();
 
   if (!result.success) {
-    return json({
-      success: false,
-      error: "ساخت حساب ادمین انجام نشد"
-    }, 500);
+    return json(
+      {
+        success: false,
+        error: "ساخت حساب ادمین انجام نشد"
+      },
+      500
+    );
   }
 
-  return json({
-    success: true,
-    message: "اولین حساب ادمین با موفقیت ساخته شد"
-  }, 201);
+  return json(
+    {
+      success: true,
+      message: "اولین حساب ادمین با موفقیت ساخته شد"
+    },
+    201
+  );
 }
 
 
@@ -526,18 +778,28 @@ async function handleAdminBootstrap(request, env) {
 // CASES - USER
 // ============================================================
 
-async function createCase(request, env) {
+async function createCase(
+  request,
+  env
+) {
   const user =
-    await getAuthenticatedUser(request, env);
+    await getAuthenticatedUser(
+      request,
+      env
+    );
 
   if (!user) {
-    return json({
-      success: false,
-      error: "ابتدا وارد حساب شوید"
-    }, 401);
+    return json(
+      {
+        success: false,
+        error: "ابتدا وارد حساب شوید"
+      },
+      401
+    );
   }
 
-  const body = await readJson(request);
+  const body =
+    await readJson(request);
 
   const complainantType =
     body.complainant_type === "other"
@@ -545,33 +807,51 @@ async function createCase(request, env) {
       : "self";
 
   const category =
-    cleanText(body.category, 50);
+    cleanText(
+      body.category,
+      50
+    );
 
   const subject =
-    cleanText(body.subject, 200);
+    cleanText(
+      body.subject,
+      200
+    );
 
   const description =
-    cleanText(body.description, MAX_DESCRIPTION);
+    cleanText(
+      body.description,
+      MAX_DESCRIPTION
+    );
 
   if (!category) {
-    return json({
-      success: false,
-      error: "دسته‌بندی شکایت را انتخاب کنید"
-    }, 400);
+    return json(
+      {
+        success: false,
+        error: "دسته‌بندی شکایت را انتخاب کنید"
+      },
+      400
+    );
   }
 
   if (!subject) {
-    return json({
-      success: false,
-      error: "موضوع شکایت الزامی است"
-    }, 400);
+    return json(
+      {
+        success: false,
+        error: "موضوع شکایت الزامی است"
+      },
+      400
+    );
   }
 
   if (!description) {
-    return json({
-      success: false,
-      error: "شرح شکایت الزامی است"
-    }, 400);
+    return json(
+      {
+        success: false,
+        error: "شرح شکایت الزامی است"
+      },
+      400
+    );
   }
 
   let otherFullName = null;
@@ -580,28 +860,223 @@ async function createCase(request, env) {
 
   if (complainantType === "other") {
     otherFullName =
-      cleanText(body.other_full_name, 100);
+      cleanText(
+        body.other_full_name,
+        100
+      );
 
     otherPhone =
-      normalizePhone(body.other_phone);
+      normalizePhone(
+        body.other_phone
+      );
 
     otherNationalId =
       normalizeDigits(
-        cleanText(body.other_national_id, 20)
+        cleanText(
+          body.other_national_id,
+          20
+        )
       );
 
     if (!otherFullName) {
-      return json({
-        success: false,
-        error: "نام شخص موردنظر الزامی است"
-      }, 400);
+      return json(
+        {
+          success: false,
+          error: "نام شخص موردنظر الزامی است"
+        },
+        400
+      );
+    }
+
+    if (
+      otherPhone &&
+      !isValidPhone(otherPhone)
+    ) {
+      return json(
+        {
+          success: false,
+          error: "شماره تلفن شخص موردنظر معتبر نیست"
+        },
+        400
+      );
+    }
+
+    if (
+      otherNationalId &&
+      !/^\d{10}$/.test(
+        otherNationalId
+      )
+    ) {
+      return json(
+        {
+          success: false,
+          error: "کد ملی باید ۱۰ رقم باشد"
+        },
+        400
+      );
     }
   }
 
-  const signatureData =
-    typeof body.signature_data === "string"
-      ? body.signature_data.slice(0, 300000)
-      : null;
+  // ----------------------------------------------------------
+  // SIGNATURE
+  // ----------------------------------------------------------
+
+  let signatureData = null;
+
+  if (
+    typeof body.signature_data === "string" &&
+    body.signature_data.trim()
+  ) {
+    signatureData =
+      body.signature_data.slice(
+        0,
+        300000
+      );
+
+    if (
+      !signatureData.startsWith(
+        "data:image/"
+      )
+    ) {
+      return json(
+        {
+          success: false,
+          error: "فرمت امضا نامعتبر است"
+        },
+        400
+      );
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ATTACHMENTS
+  // ----------------------------------------------------------
+
+  const attachments =
+    Array.isArray(body.attachments)
+      ? body.attachments
+      : [];
+
+  if (
+    attachments.length >
+    MAX_ATTACHMENTS
+  ) {
+    return json(
+      {
+        success: false,
+        error: "حداکثر ۵ فایل را می‌توانید پیوست کنید"
+      },
+      400
+    );
+  }
+
+  let totalAttachmentSize = 0;
+
+  for (
+    const file of attachments
+  ) {
+    const fileName =
+      cleanText(
+        file?.file_name,
+        200
+      );
+
+    const contentType =
+      cleanText(
+        file?.content_type,
+        100
+      );
+
+    const fileSize =
+      Number(
+        file?.file_size
+      );
+
+    const fileData =
+      typeof file?.file_data === "string"
+        ? file.file_data
+        : "";
+
+    if (
+      !fileName ||
+      !contentType ||
+      !Number.isInteger(fileSize) ||
+      fileSize < 0 ||
+      !fileData
+    ) {
+      return json(
+        {
+          success: false,
+          error: "اطلاعات یکی از فایل‌های پیوست نامعتبر است"
+        },
+        400
+      );
+    }
+
+    if (
+      fileSize >
+      MAX_FILE_SIZE
+    ) {
+      return json(
+        {
+          success: false,
+          error:
+            "حجم هر فایل نباید بیشتر از ۵۰۰ کیلوبایت باشد"
+        },
+        400
+      );
+    }
+
+    totalAttachmentSize +=
+      fileSize;
+
+    if (
+      totalAttachmentSize >
+      MAX_TOTAL_FILE_SIZE
+    ) {
+      return json(
+        {
+          success: false,
+          error:
+            "حجم مجموع فایل‌ها نباید بیشتر از ۱.۵ مگابایت باشد"
+        },
+        400
+      );
+    }
+
+    if (
+      fileData.length >
+      MAX_FILE_DATA_LENGTH
+    ) {
+      return json(
+        {
+          success: false,
+          error:
+            "داده یکی از فایل‌های پیوست بیش از حد مجاز است"
+        },
+        400
+      );
+    }
+
+    if (
+      !fileData.startsWith(
+        "data:"
+      )
+    ) {
+      return json(
+        {
+          success: false,
+          error:
+            "فرمت یکی از فایل‌های پیوست نامعتبر است"
+        },
+        400
+      );
+    }
+  }
+
+  // ----------------------------------------------------------
+  // TRACKING CODE
+  // ----------------------------------------------------------
 
   const trackingCode =
     await generateTrackingCode(
@@ -609,47 +1084,106 @@ async function createCase(request, env) {
       complainantType
     );
 
-  const result = await env.DB
-    .prepare(`
-      INSERT INTO cases
-      (
-        tracking_code,
-        user_id,
-        complainant_type,
-        other_full_name,
-        other_phone,
-        other_national_id,
+  // ----------------------------------------------------------
+  // INSERT CASE
+  // ----------------------------------------------------------
+
+  const result =
+    await env.DB
+      .prepare(`
+        INSERT INTO cases
+        (
+          tracking_code,
+          user_id,
+          complainant_type,
+          other_full_name,
+          other_phone,
+          other_national_id,
+          category,
+          subject,
+          description,
+          signature_data,
+          status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')
+      `)
+      .bind(
+        trackingCode,
+        user.id,
+        complainantType,
+        otherFullName,
+        otherPhone,
+        otherNationalId,
         category,
         subject,
         description,
-        signature_data,
-        status
+        signatureData
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')
-    `)
-    .bind(
-      trackingCode,
-      user.id,
-      complainantType,
-      otherFullName,
-      otherPhone,
-      otherNationalId,
-      category,
-      subject,
-      description,
-      signatureData
-    )
-    .run();
+      .run();
 
   if (!result.success) {
-    return json({
-      success: false,
-      error: "ثبت شکایت انجام نشد"
-    }, 500);
+    return json(
+      {
+        success: false,
+        error: "ثبت شکایت انجام نشد"
+      },
+      500
+    );
   }
 
   const caseId =
     result.meta?.last_row_id;
+
+  if (!caseId) {
+    return json(
+      {
+        success: false,
+        error: "شناسه پرونده تولید نشد"
+      },
+      500
+    );
+  }
+
+  // ----------------------------------------------------------
+  // SAVE ATTACHMENTS
+  // ----------------------------------------------------------
+
+  for (
+    const file of attachments
+  ) {
+    await env.DB
+      .prepare(`
+        INSERT INTO attachments
+        (
+          case_id,
+          file_name,
+          content_type,
+          file_size,
+          file_data
+        )
+        VALUES (?, ?, ?, ?, ?)
+      `)
+      .bind(
+        caseId,
+        cleanText(
+          file.file_name,
+          200
+        ),
+        cleanText(
+          file.content_type,
+          100
+        ),
+        Number(
+          file.file_size
+        ),
+        file.file_data
+      )
+      .run();
+  }
+
+  // ----------------------------------------------------------
+  // CREATE EVENT
+  // ----------------------------------------------------------
 
   await env.DB
     .prepare(`
@@ -669,126 +1203,161 @@ async function createCase(request, env) {
     )
     .run();
 
-  return json({
-    success: true,
-    message: "شکایت با موفقیت ثبت شد",
-    case: {
-      id: caseId,
-      tracking_code: trackingCode,
-      status: "new"
-    }
-  }, 201);
+  return json(
+    {
+      success: true,
+      message: "شکایت با موفقیت ثبت شد",
+      case: {
+        id: caseId,
+        tracking_code: trackingCode,
+        status: "new"
+      }
+    },
+    201
+  );
 }
 
 
-async function listCases(request, env) {
+async function listCases(
+  request,
+  env
+) {
   const user =
-    await getAuthenticatedUser(request, env);
+    await getAuthenticatedUser(
+      request,
+      env
+    );
 
   if (!user) {
-    return json({
-      success: false,
-      error: "ابتدا وارد حساب شوید"
-    }, 401);
+    return json(
+      {
+        success: false,
+        error: "ابتدا وارد حساب شوید"
+      },
+      401
+    );
   }
 
-  const rows = await env.DB
-    .prepare(`
-      SELECT
-        id,
-        tracking_code,
-        complainant_type,
-        category,
-        subject,
-        status,
-        created_at,
-        updated_at
-      FROM cases
-      WHERE user_id = ?
-      ORDER BY id DESC
-    `)
-    .bind(user.id)
-    .all();
+  const rows =
+    await env.DB
+      .prepare(`
+        SELECT
+          id,
+          tracking_code,
+          complainant_type,
+          category,
+          subject,
+          status,
+          created_at,
+          updated_at
+        FROM cases
+        WHERE user_id = ?
+        ORDER BY id DESC
+      `)
+      .bind(user.id)
+      .all();
 
   return json({
     success: true,
-    cases: rows.results || []
+    cases:
+      rows.results || []
   });
 }
 
 
-async function getCase(request, env, caseId) {
+async function getCase(
+  request,
+  env,
+  caseId
+) {
   const user =
-    await getAuthenticatedUser(request, env);
+    await getAuthenticatedUser(
+      request,
+      env
+    );
 
   if (!user) {
-    return json({
-      success: false,
-      error: "ابتدا وارد حساب شوید"
-    }, 401);
+    return json(
+      {
+        success: false,
+        error: "ابتدا وارد حساب شوید"
+      },
+      401
+    );
   }
 
-  const item = await env.DB
-    .prepare(`
-      SELECT *
-      FROM cases
-      WHERE id = ?
-      LIMIT 1
-    `)
-    .bind(caseId)
-    .first();
+  const item =
+    await env.DB
+      .prepare(`
+        SELECT *
+        FROM cases
+        WHERE id = ?
+        LIMIT 1
+      `)
+      .bind(caseId)
+      .first();
 
   if (!item) {
-    return json({
-      success: false,
-      error: "پرونده پیدا نشد"
-    }, 404);
+    return json(
+      {
+        success: false,
+        error: "پرونده پیدا نشد"
+      },
+      404
+    );
   }
 
   if (
     user.role !== "admin" &&
     item.user_id !== user.id
   ) {
-    return json({
-      success: false,
-      error: "دسترسی به این پرونده مجاز نیست"
-    }, 403);
+    return json(
+      {
+        success: false,
+        error: "دسترسی به این پرونده مجاز نیست"
+      },
+      403
+    );
   }
 
-  const events = await env.DB
-    .prepare(`
-      SELECT
-        e.*,
-        u.full_name AS actor_name
-      FROM case_events e
-      LEFT JOIN users u
-        ON u.id = e.actor_user_id
-      WHERE e.case_id = ?
-      ORDER BY e.id DESC
-    `)
-    .bind(caseId)
-    .all();
+  const events =
+    await env.DB
+      .prepare(`
+        SELECT
+          e.*,
+          u.full_name AS actor_name
+        FROM case_events e
+        LEFT JOIN users u
+          ON u.id = e.actor_user_id
+        WHERE e.case_id = ?
+        ORDER BY e.id DESC
+      `)
+      .bind(caseId)
+      .all();
 
-  const attachments = await env.DB
-    .prepare(`
-      SELECT
-        id,
-        file_name,
-        content_type,
-        file_size,
-        created_at
-      FROM attachments
-      WHERE case_id = ?
-      ORDER BY id DESC
-    `)
-    .bind(caseId)
-    .all();
+  const attachments =
+    await env.DB
+      .prepare(`
+        SELECT
+          id,
+          file_name,
+          content_type,
+          file_size,
+          created_at
+        FROM attachments
+        WHERE case_id = ?
+        ORDER BY id DESC
+      `)
+      .bind(caseId)
+      .all();
 
   return json({
     success: true,
     case: item,
-    events: events.results || [],
-    attachments: attachments.results || []
+    events:
+      events.results || [],
+    attachments:
+      attachments.results || []
   });
 }
 
@@ -797,35 +1366,50 @@ async function getCase(request, env, caseId) {
 // CASE UPDATE - ADMIN
 // ============================================================
 
-async function updateCase(request, env, caseId) {
+async function updateCase(
+  request,
+  env,
+  caseId
+) {
   const admin =
-    await requireAdmin(request, env);
+    await requireAdmin(
+      request,
+      env
+    );
 
   if (!admin) {
-    return json({
-      success: false,
-      error: "دسترسی مدیر لازم است"
-    }, 403);
+    return json(
+      {
+        success: false,
+        error: "دسترسی مدیر لازم است"
+      },
+      403
+    );
   }
 
-  const existing = await env.DB
-    .prepare(`
-      SELECT *
-      FROM cases
-      WHERE id = ?
-      LIMIT 1
-    `)
-    .bind(caseId)
-    .first();
+  const existing =
+    await env.DB
+      .prepare(`
+        SELECT *
+        FROM cases
+        WHERE id = ?
+        LIMIT 1
+      `)
+      .bind(caseId)
+      .first();
 
   if (!existing) {
-    return json({
-      success: false,
-      error: "پرونده پیدا نشد"
-    }, 404);
+    return json(
+      {
+        success: false,
+        error: "پرونده پیدا نشد"
+      },
+      404
+    );
   }
 
-  const body = await readJson(request);
+  const body =
+    await readJson(request);
 
   const allowedStatuses = [
     "new",
@@ -835,13 +1419,18 @@ async function updateCase(request, env, caseId) {
   ];
 
   const status =
-    allowedStatuses.includes(body.status)
+    allowedStatuses.includes(
+      body.status
+    )
       ? body.status
       : existing.status;
 
   const subject =
     body.subject !== undefined
-      ? cleanText(body.subject, 200)
+      ? cleanText(
+          body.subject,
+          200
+        )
       : existing.subject;
 
   const description =
@@ -851,6 +1440,26 @@ async function updateCase(request, env, caseId) {
           MAX_DESCRIPTION
         )
       : existing.description;
+
+  if (!subject) {
+    return json(
+      {
+        success: false,
+        error: "موضوع نمی‌تواند خالی باشد"
+      },
+      400
+    );
+  }
+
+  if (!description) {
+    return json(
+      {
+        success: false,
+        error: "شرح پرونده نمی‌تواند خالی باشد"
+      },
+      400
+    );
+  }
 
   await env.DB
     .prepare(`
@@ -870,7 +1479,10 @@ async function updateCase(request, env, caseId) {
     )
     .run();
 
-  if (status !== existing.status) {
+  if (
+    status !==
+    existing.status
+  ) {
     await env.DB
       .prepare(`
         INSERT INTO case_events
@@ -890,6 +1502,31 @@ async function updateCase(request, env, caseId) {
       .run();
   }
 
+  if (
+    subject !==
+      existing.subject ||
+    description !==
+      existing.description
+  ) {
+    await env.DB
+      .prepare(`
+        INSERT INTO case_events
+        (
+          case_id,
+          actor_user_id,
+          event_type,
+          description
+        )
+        VALUES (?, ?, 'updated', ?)
+      `)
+      .bind(
+        caseId,
+        admin.id,
+        "اطلاعات پرونده توسط مدیر ویرایش شد"
+      )
+      .run();
+  }
+
   await writeAuditLog(
     env,
     admin.id,
@@ -897,14 +1534,17 @@ async function updateCase(request, env, caseId) {
     "case",
     caseId,
     JSON.stringify({
-      old_status: existing.status,
-      new_status: status
+      old_status:
+        existing.status,
+      new_status:
+        status
     })
   );
 
   return json({
     success: true,
-    message: "پرونده به‌روزرسانی شد"
+    message:
+      "پرونده به‌روزرسانی شد"
   });
 }
 
@@ -913,64 +1553,85 @@ async function updateCase(request, env, caseId) {
 // CASE EVENTS
 // ============================================================
 
-async function getCaseEvents(request, env, caseId) {
+async function getCaseEvents(
+  request,
+  env,
+  caseId
+) {
   const user =
-    await getAuthenticatedUser(request, env);
+    await getAuthenticatedUser(
+      request,
+      env
+    );
 
   if (!user) {
-    return json({
-      success: false,
-      error: "ابتدا وارد حساب شوید"
-    }, 401);
+    return json(
+      {
+        success: false,
+        error: "ابتدا وارد حساب شوید"
+      },
+      401
+    );
   }
 
-  const item = await env.DB
-    .prepare(`
-      SELECT id, user_id
-      FROM cases
-      WHERE id = ?
-      LIMIT 1
-    `)
-    .bind(caseId)
-    .first();
+  const item =
+    await env.DB
+      .prepare(`
+        SELECT
+          id,
+          user_id
+        FROM cases
+        WHERE id = ?
+        LIMIT 1
+      `)
+      .bind(caseId)
+      .first();
 
   if (!item) {
-    return json({
-      success: false,
-      error: "پرونده پیدا نشد"
-    }, 404);
+    return json(
+      {
+        success: false,
+        error: "پرونده پیدا نشد"
+      },
+      404
+    );
   }
 
   if (
     user.role !== "admin" &&
     item.user_id !== user.id
   ) {
-    return json({
-      success: false,
-      error: "دسترسی غیرمجاز"
-    }, 403);
+    return json(
+      {
+        success: false,
+        error: "دسترسی غیرمجاز"
+      },
+      403
+    );
   }
 
-  const events = await env.DB
-    .prepare(`
-      SELECT
-        e.id,
-        e.event_type,
-        e.description,
-        e.created_at,
-        u.full_name AS actor_name
-      FROM case_events e
-      LEFT JOIN users u
-        ON u.id = e.actor_user_id
-      WHERE e.case_id = ?
-      ORDER BY e.id DESC
-    `)
-    .bind(caseId)
-    .all();
+  const events =
+    await env.DB
+      .prepare(`
+        SELECT
+          e.id,
+          e.event_type,
+          e.description,
+          e.created_at,
+          u.full_name AS actor_name
+        FROM case_events e
+        LEFT JOIN users u
+          ON u.id = e.actor_user_id
+        WHERE e.case_id = ?
+        ORDER BY e.id DESC
+      `)
+      .bind(caseId)
+      .all();
 
   return json({
     success: true,
-    events: events.results || []
+    events:
+      events.results || []
   });
 }
 
@@ -979,159 +1640,248 @@ async function getCaseEvents(request, env, caseId) {
 // ADMIN CASES
 // ============================================================
 
-async function adminListCases(request, env) {
+async function adminListCases(
+  request,
+  env
+) {
   const admin =
-    await requireAdmin(request, env);
+    await requireAdmin(
+      request,
+      env
+    );
 
   if (!admin) {
-    return json({
-      success: false,
-      error: "دسترسی مدیر لازم است"
-    }, 403);
+    return json(
+      {
+        success: false,
+        error: "دسترسی مدیر لازم است"
+      },
+      403
+    );
   }
 
-  const url = new URL(request.url);
+  const url =
+    new URL(
+      request.url
+    );
+
   const search =
-    cleanText(url.searchParams.get("search"), 100);
+    cleanText(
+      url.searchParams.get(
+        "search"
+      ),
+      100
+    );
 
   let rows;
 
   if (search) {
-    const like = `%${search}%`;
+    const like =
+      `%${search}%`;
 
-    rows = await env.DB
-      .prepare(`
-        SELECT
-          c.*,
-          u.full_name AS owner_name,
-          u.phone AS owner_phone
-        FROM cases c
-        INNER JOIN users u
-          ON u.id = c.user_id
-        WHERE
-          c.tracking_code LIKE ?
-          OR c.subject LIKE ?
-          OR c.category LIKE ?
-          OR u.phone LIKE ?
-          OR u.full_name LIKE ?
-        ORDER BY c.id DESC
-      `)
-      .bind(
-        like,
-        like,
-        like,
-        like,
-        like
-      )
-      .all();
+    rows =
+      await env.DB
+        .prepare(`
+          SELECT
+            c.*,
+            u.full_name AS owner_name,
+            u.phone AS owner_phone
+          FROM cases c
+          INNER JOIN users u
+            ON u.id = c.user_id
+          WHERE
+            c.tracking_code LIKE ?
+            OR c.subject LIKE ?
+            OR c.category LIKE ?
+            OR u.phone LIKE ?
+            OR u.full_name LIKE ?
+          ORDER BY c.id DESC
+        `)
+        .bind(
+          like,
+          like,
+          like,
+          like,
+          like
+        )
+        .all();
+
   } else {
-    rows = await env.DB
-      .prepare(`
-        SELECT
-          c.*,
-          u.full_name AS owner_name,
-          u.phone AS owner_phone
-        FROM cases c
-        INNER JOIN users u
-          ON u.id = c.user_id
-        ORDER BY c.id DESC
-      `)
-      .all();
+    rows =
+      await env.DB
+        .prepare(`
+          SELECT
+            c.*,
+            u.full_name AS owner_name,
+            u.phone AS owner_phone
+          FROM cases c
+          INNER JOIN users u
+            ON u.id = c.user_id
+          ORDER BY c.id DESC
+        `)
+        .all();
   }
 
   return json({
     success: true,
-    cases: rows.results || []
+    cases:
+      rows.results || []
   });
 }
 
 
 // ============================================================
-// NOTIFICATIONS
+// NOTIFICATIONS - ADMIN
 // ============================================================
 
-async function createNotification(request, env) {
+async function createNotification(
+  request,
+  env
+) {
   const admin =
-    await requireAdmin(request, env);
+    await requireAdmin(
+      request,
+      env
+    );
 
   if (!admin) {
-    return json({
-      success: false,
-      error: "دسترسی مدیر لازم است"
-    }, 403);
+    return json(
+      {
+        success: false,
+        error: "دسترسی مدیر لازم است"
+      },
+      403
+    );
   }
 
-  const body = await readJson(request);
+  const body =
+    await readJson(request);
 
   const userId =
-    Number(body.user_id);
+    Number(
+      body.user_id
+    );
 
   const caseId =
     body.case_id
-      ? Number(body.case_id)
+      ? Number(
+          body.case_id
+        )
       : null;
 
   const title =
-    cleanText(body.title, 200);
+    cleanText(
+      body.title,
+      200
+    );
 
   const message =
-    cleanText(body.message, 5000);
+    cleanText(
+      body.message,
+      5000
+    );
 
-  if (!Number.isInteger(userId) || userId <= 0) {
-    return json({
-      success: false,
-      error: "کاربر نامعتبر است"
-    }, 400);
+  if (
+    !Number.isInteger(
+      userId
+    ) ||
+    userId <= 0
+  ) {
+    return json(
+      {
+        success: false,
+        error: "کاربر نامعتبر است"
+      },
+      400
+    );
   }
 
   if (!title || !message) {
-    return json({
-      success: false,
-      error: "عنوان و متن ابلاغیه الزامی است"
-    }, 400);
+    return json(
+      {
+        success: false,
+        error:
+          "عنوان و متن ابلاغیه الزامی است"
+      },
+      400
+    );
   }
 
-  const targetUser = await env.DB
-    .prepare(`
-      SELECT id
-      FROM users
-      WHERE id = ?
-      LIMIT 1
-    `)
-    .bind(userId)
-    .first();
+  const targetUser =
+    await env.DB
+      .prepare(`
+        SELECT
+          id
+        FROM users
+        WHERE id = ?
+        LIMIT 1
+      `)
+      .bind(userId)
+      .first();
 
   if (!targetUser) {
-    return json({
-      success: false,
-      error: "کاربر پیدا نشد"
-    }, 404);
+    return json(
+      {
+        success: false,
+        error: "کاربر پیدا نشد"
+      },
+      404
+    );
   }
 
-  const result = await env.DB
-    .prepare(`
-      INSERT INTO notifications
-      (
-        user_id,
-        case_id,
+  if (caseId !== null) {
+    const targetCase =
+      await env.DB
+        .prepare(`
+          SELECT
+            id
+          FROM cases
+          WHERE id = ?
+          LIMIT 1
+        `)
+        .bind(caseId)
+        .first();
+
+    if (!targetCase) {
+      return json(
+        {
+          success: false,
+          error: "پرونده موردنظر پیدا نشد"
+        },
+        404
+      );
+    }
+  }
+
+  const result =
+    await env.DB
+      .prepare(`
+        INSERT INTO notifications
+        (
+          user_id,
+          case_id,
+          title,
+          message
+        )
+        VALUES (?, ?, ?, ?)
+      `)
+      .bind(
+        userId,
+        caseId,
         title,
         message
       )
-      VALUES (?, ?, ?, ?)
-    `)
-    .bind(
-      userId,
-      caseId,
-      title,
-      message
-    )
-    .run();
+      .run();
 
   if (!result.success) {
-    return json({
-      success: false,
-      error: "ارسال ابلاغیه انجام نشد"
-    }, 500);
+    return json(
+      {
+        success: false,
+        error:
+          "ارسال ابلاغیه انجام نشد"
+      },
+      500
+    );
   }
 
   await writeAuditLog(
@@ -1139,53 +1889,73 @@ async function createNotification(request, env) {
     admin.id,
     "create_notification",
     "notification",
-    result.meta?.last_row_id || null,
+    result.meta?.last_row_id ||
+      null,
     JSON.stringify({
       user_id: userId,
       case_id: caseId
     })
   );
 
-  return json({
-    success: true,
-    message: "ابلاغیه با موفقیت ثبت شد"
-  }, 201);
+  return json(
+    {
+      success: true,
+      message:
+        "ابلاغیه با موفقیت ثبت شد"
+    },
+    201
+  );
 }
 
 
-async function listNotifications(request, env) {
+// ============================================================
+// NOTIFICATIONS - USER
+// ============================================================
+
+async function listNotifications(
+  request,
+  env
+) {
   const user =
-    await getAuthenticatedUser(request, env);
+    await getAuthenticatedUser(
+      request,
+      env
+    );
 
   if (!user) {
-    return json({
-      success: false,
-      error: "ابتدا وارد حساب شوید"
-    }, 401);
+    return json(
+      {
+        success: false,
+        error: "ابتدا وارد حساب شوید"
+      },
+      401
+    );
   }
 
-  const rows = await env.DB
-    .prepare(`
-      SELECT
-        id,
-        case_id,
-        title,
-        message,
-        is_viewed,
-        is_confirmed,
-        created_at,
-        viewed_at,
-        confirmed_at
-      FROM notifications
-      WHERE user_id = ?
-      ORDER BY id DESC
-    `)
-    .bind(user.id)
-    .all();
+  const rows =
+    await env.DB
+      .prepare(`
+        SELECT
+          id,
+          case_id,
+          title,
+          message,
+          is_viewed,
+          is_confirmed,
+          created_at,
+          viewed_at,
+          confirmed_at
+        FROM notifications
+        WHERE user_id = ?
+        ORDER BY id DESC
+      `)
+      .bind(user.id)
+      .all();
 
   return json({
     success: true,
-    notifications: rows.results || []
+    notifications:
+      rows.results || []
   });
 }
 
@@ -1196,43 +1966,57 @@ async function updateNotification(
   notificationId
 ) {
   const user =
-    await getAuthenticatedUser(request, env);
+    await getAuthenticatedUser(
+      request,
+      env
+    );
 
   if (!user) {
-    return json({
-      success: false,
-      error: "ابتدا وارد حساب شوید"
-    }, 401);
+    return json(
+      {
+        success: false,
+        error: "ابتدا وارد حساب شوید"
+      },
+      401
+    );
   }
 
-  const item = await env.DB
-    .prepare(`
-      SELECT *
-      FROM notifications
-      WHERE id = ?
-      LIMIT 1
-    `)
-    .bind(notificationId)
-    .first();
+  const item =
+    await env.DB
+      .prepare(`
+        SELECT *
+        FROM notifications
+        WHERE id = ?
+        LIMIT 1
+      `)
+      .bind(notificationId)
+      .first();
 
   if (!item) {
-    return json({
-      success: false,
-      error: "ابلاغیه پیدا نشد"
-    }, 404);
+    return json(
+      {
+        success: false,
+        error: "ابلاغیه پیدا نشد"
+      },
+      404
+    );
   }
 
   if (
     user.role !== "admin" &&
     item.user_id !== user.id
   ) {
-    return json({
-      success: false,
-      error: "دسترسی غیرمجاز"
-    }, 403);
+    return json(
+      {
+        success: false,
+        error: "دسترسی غیرمجاز"
+      },
+      403
+    );
   }
 
-  const body = await readJson(request);
+  const body =
+    await readJson(request);
 
   const changes = [];
 
@@ -1252,7 +2036,9 @@ async function updateNotification(
       .bind(notificationId)
       .run();
 
-    changes.push("viewed");
+    changes.push(
+      "viewed"
+    );
   }
 
   if (
@@ -1276,7 +2062,9 @@ async function updateNotification(
       .bind(notificationId)
       .run();
 
-    changes.push("confirmed");
+    changes.push(
+      "confirmed"
+    );
   }
 
   return json({
@@ -1287,36 +2075,47 @@ async function updateNotification(
 
 
 // ============================================================
-// ADMIN AUDIT LOG
+// ADMIN AUDIT LOGS
 // ============================================================
 
-async function getAuditLogs(request, env) {
+async function getAuditLogs(
+  request,
+  env
+) {
   const admin =
-    await requireAdmin(request, env);
+    await requireAdmin(
+      request,
+      env
+    );
 
   if (!admin) {
-    return json({
-      success: false,
-      error: "دسترسی مدیر لازم است"
-    }, 403);
+    return json(
+      {
+        success: false,
+        error: "دسترسی مدیر لازم است"
+      },
+      403
+    );
   }
 
-  const rows = await env.DB
-    .prepare(`
-      SELECT
-        a.*,
-        u.full_name AS admin_name
-      FROM admin_audit_logs a
-      LEFT JOIN users u
-        ON u.id = a.admin_user_id
-      ORDER BY a.id DESC
-      LIMIT 500
-    `)
-    .all();
+  const rows =
+    await env.DB
+      .prepare(`
+        SELECT
+          a.*,
+          u.full_name AS admin_name
+        FROM admin_audit_logs a
+        LEFT JOIN users u
+          ON u.id = a.admin_user_id
+        ORDER BY a.id DESC
+        LIMIT 500
+      `)
+      .all();
 
   return json({
     success: true,
-    logs: rows.results || []
+    logs:
+      rows.results || []
   });
 }
 
@@ -1356,11 +2155,20 @@ async function writeAuditLog(
 // AUTHORIZATION
 // ============================================================
 
-async function requireAdmin(request, env) {
+async function requireAdmin(
+  request,
+  env
+) {
   const user =
-    await getAuthenticatedUser(request, env);
+    await getAuthenticatedUser(
+      request,
+      env
+    );
 
-  if (!user || user.role !== "admin") {
+  if (
+    !user ||
+    user.role !== "admin"
+  ) {
     return null;
   }
 
@@ -1372,26 +2180,33 @@ async function requireAdmin(request, env) {
 // SESSION
 // ============================================================
 
-async function createSession(env, userId) {
+async function createSession(
+  env,
+  userId
+) {
   const tokenBytes =
     crypto.getRandomValues(
       new Uint8Array(32)
     );
 
   const token =
-    bytesToBase64Url(tokenBytes);
+    bytesToBase64Url(
+      tokenBytes
+    );
 
   const tokenHash =
-    await sha256Base64Url(token);
+    await sha256Base64Url(
+      token
+    );
 
   const expiresDate =
     new Date(
       Date.now() +
-      SESSION_DAYS *
-      24 *
-      60 *
-      60 *
-      1000
+        SESSION_DAYS *
+          24 *
+          60 *
+          60 *
+          1000
     );
 
   const expires =
@@ -1426,55 +2241,68 @@ async function getAuthenticatedUser(
   env
 ) {
   const token =
-    getSessionToken(request);
+    getSessionToken(
+      request
+    );
 
   if (!token) {
     return null;
   }
 
   const tokenHash =
-    await sha256Base64Url(token);
+    await sha256Base64Url(
+      token
+    );
 
-  const session = await env.DB
-    .prepare(`
-      SELECT
-        s.id AS session_id,
-        s.expires_at,
-        u.id,
-        u.full_name,
-        u.phone,
-        u.role,
-        u.is_active,
-        u.created_at
-      FROM sessions s
-      INNER JOIN users u
-        ON u.id = s.user_id
-      WHERE s.token_hash = ?
-      LIMIT 1
-    `)
-    .bind(tokenHash)
-    .first();
+  const session =
+    await env.DB
+      .prepare(`
+        SELECT
+          s.id AS session_id,
+          s.expires_at,
+          u.id,
+          u.full_name,
+          u.phone,
+          u.role,
+          u.is_active,
+          u.created_at
+        FROM sessions s
+        INNER JOIN users u
+          ON u.id = s.user_id
+        WHERE s.token_hash = ?
+        LIMIT 1
+      `)
+      .bind(tokenHash)
+      .first();
 
   if (!session) {
     return null;
   }
 
-  if (session.is_active !== 1) {
+  if (
+    session.is_active !== 1
+  ) {
     return null;
   }
 
   const expiresTime =
-    Date.parse(session.expires_at);
+    Date.parse(
+      session.expires_at
+    );
 
   if (
-    !Number.isFinite(expiresTime) ||
+    !Number.isFinite(
+      expiresTime
+    ) ||
     expiresTime <= Date.now()
   ) {
     await env.DB
       .prepare(
         "DELETE FROM sessions WHERE id = ?"
       )
-      .bind(session.session_id)
+      .bind(
+        session.session_id
+      )
       .run();
 
     return null;
@@ -1493,57 +2321,84 @@ async function generateTrackingCode(
   complainantType
 ) {
   /*
-    ساختار:
+    ساختار دقیق کد:
+
     سال شمسی
     + ماه میلادی
     + روز قمری
     + سال میلادی
     + ساعت
-    + نوع
+    + نوع شکایت
 
     مثال:
+
     ۱۴۰۵۱۰۰۲۲۰۲۶۱۴۲
+
+    ۱۴۰۵ = سال شمسی
+    ۱۰   = ماه میلادی
+    ۰۲   = روز قمری
+    ۲۰۲۶ = سال میلادی
+    ۱۴   = ساعت
+    ۲    = نوع شکایت
   */
 
-  for (let attempt = 0; attempt < 10; attempt++) {
-    const now = new Date();
+  for (
+    let attempt = 0;
+    attempt < 20;
+    attempt++
+  ) {
+    const now =
+      new Date();
 
     const persianYear =
       getCalendarPart(
         now,
         "en-US-u-ca-persian",
-        "year"
+        "year",
+        "Asia/Tehran"
       );
 
     const gregorianMonth =
-      String(now.getUTCMonth() + 1)
-        .padStart(2, "0");
+      getCalendarPart(
+        now,
+        "en-US",
+        "month",
+        "Asia/Tehran"
+      );
 
     const islamicDay =
       getCalendarPart(
         now,
         "en-US-u-ca-islamic",
-        "day"
-      ).padStart(2, "0");
+        "day",
+        "Asia/Tehran"
+      );
 
     const gregorianYear =
-      String(now.getUTCFullYear());
+      getCalendarPart(
+        now,
+        "en-US",
+        "year",
+        "Asia/Tehran"
+      );
 
     const hour =
-      String(now.getUTCHours())
-        .padStart(2, "0");
+      getCalendarPart(
+        now,
+        "en-US",
+        "hour",
+        "Asia/Tehran"
+      );
 
+    /*
+      نوع:
+      ۱ = برای خودم
+      ۲ = برای شخص دیگر
+    */
     const typeCode =
       complainantType === "other"
         ? "2"
         : "1";
-
-    const random =
-      String(
-        crypto.getRandomValues(
-          new Uint8Array(2)
-        )[0] % 10
-      );
 
     const raw =
       `${persianYear}` +
@@ -1551,24 +2406,94 @@ async function generateTrackingCode(
       `${islamicDay}` +
       `${gregorianYear}` +
       `${hour}` +
-      `${typeCode}` +
-      `${random}`;
+      `${typeCode}`;
 
     const code =
-      normalizeDigits(raw);
+      normalizeDigits(
+        raw
+      );
 
-    const exists = await env.DB
-      .prepare(`
-        SELECT id
-        FROM cases
-        WHERE tracking_code = ?
-        LIMIT 1
-      `)
-      .bind(code)
-      .first();
+    const exists =
+      await env.DB
+        .prepare(`
+          SELECT
+            id
+          FROM cases
+          WHERE tracking_code = ?
+          LIMIT 1
+        `)
+        .bind(code)
+        .first();
 
     if (!exists) {
       return code;
+    }
+
+    /*
+      اگر در یک ساعت، یک کد کاملاً مشابه
+      از قبل وجود داشته باشد، برای جلوگیری
+      از برخورد، یک شناسه‌ی کوتاه از
+      شناسه‌های موجود استفاده می‌کنیم.
+    */
+
+    const countResult =
+      await env.DB
+        .prepare(`
+          SELECT COUNT(*) AS total
+          FROM cases
+          WHERE tracking_code LIKE ?
+        `)
+        .bind(
+          `${code.slice(
+            0,
+            -1
+          )}%`
+        )
+        .first();
+
+    const nextNumber =
+      Number(
+        countResult?.total || 0
+      ) + 1;
+
+    const suffix =
+      String(
+        nextNumber % 10
+      );
+
+    /*
+      توجه:
+      ساختار اصلی کد همان ساختار ۱۵ رقمی
+      باقی می‌ماند؛ برای برخورد احتمالی،
+      رقم نوع در صورت نیاز تغییر می‌کند.
+    */
+
+    const fallbackCode =
+      normalizeDigits(
+        `${persianYear}` +
+        `${gregorianMonth}` +
+        `${islamicDay}` +
+        `${gregorianYear}` +
+        `${hour}` +
+        `${suffix}`
+      );
+
+    const fallbackExists =
+      await env.DB
+        .prepare(`
+          SELECT
+            id
+          FROM cases
+          WHERE tracking_code = ?
+          LIMIT 1
+        `)
+        .bind(
+          fallbackCode
+        )
+        .first();
+
+    if (!fallbackExists) {
+      return fallbackCode;
     }
   }
 
@@ -1581,20 +2506,24 @@ async function generateTrackingCode(
 function getCalendarPart(
   date,
   calendar,
-  part
+  part,
+  timeZone = "Asia/Tehran"
 ) {
   const formatter =
     new Intl.DateTimeFormat(
       calendar,
       {
-        timeZone: "UTC",
+        timeZone,
         [part]: "2-digit"
       }
     );
 
   return formatter
     .formatToParts(date)
-    .find(x => x.type === part)
+    .find(
+      x =>
+        x.type === part
+    )
     ?.value || "";
 }
 
@@ -1603,7 +2532,9 @@ function getCalendarPart(
 // PASSWORD
 // ============================================================
 
-async function hashPassword(password) {
+async function hashPassword(
+  password
+) {
   const saltBytes =
     crypto.getRandomValues(
       new Uint8Array(16)
@@ -1612,7 +2543,9 @@ async function hashPassword(password) {
   const keyMaterial =
     await crypto.subtle.importKey(
       "raw",
-      encoder.encode(password),
+      encoder.encode(
+        password
+      ),
       "PBKDF2",
       false,
       ["deriveBits"]
@@ -1623,7 +2556,8 @@ async function hashPassword(password) {
       {
         name: "PBKDF2",
         salt: saltBytes,
-        iterations: PASSWORD_ITERATIONS,
+        iterations:
+          PASSWORD_ITERATIONS,
         hash: "SHA-256"
       },
       keyMaterial,
@@ -1632,11 +2566,15 @@ async function hashPassword(password) {
 
   return {
     salt:
-      bytesToBase64Url(saltBytes),
+      bytesToBase64Url(
+        saltBytes
+      ),
 
     hash:
       bytesToBase64Url(
-        new Uint8Array(derivedBits)
+        new Uint8Array(
+          derivedBits
+        )
       )
   };
 }
@@ -1649,12 +2587,16 @@ async function verifyPassword(
 ) {
   try {
     const salt =
-      base64UrlToBytes(storedSalt);
+      base64UrlToBytes(
+        storedSalt
+      );
 
     const keyMaterial =
       await crypto.subtle.importKey(
         "raw",
-        encoder.encode(password),
+        encoder.encode(
+          password
+        ),
         "PBKDF2",
         false,
         ["deriveBits"]
@@ -1665,7 +2607,8 @@ async function verifyPassword(
         {
           name: "PBKDF2",
           salt,
-          iterations: PASSWORD_ITERATIONS,
+          iterations:
+            PASSWORD_ITERATIONS,
           hash: "SHA-256"
         },
         keyMaterial,
@@ -1673,10 +2616,14 @@ async function verifyPassword(
       );
 
     const calculated =
-      new Uint8Array(derivedBits);
+      new Uint8Array(
+        derivedBits
+      );
 
     const expected =
-      base64UrlToBytes(storedHash);
+      base64UrlToBytes(
+        storedHash
+      );
 
     return constantTimeEqual(
       calculated,
@@ -1693,65 +2640,114 @@ async function verifyPassword(
 // CRYPTO
 // ============================================================
 
-async function sha256Base64Url(value) {
+async function sha256Base64Url(
+  value
+) {
   const digest =
     await crypto.subtle.digest(
       "SHA-256",
-      encoder.encode(value)
+      encoder.encode(
+        value
+      )
     );
 
   return bytesToBase64Url(
-    new Uint8Array(digest)
+    new Uint8Array(
+      digest
+    )
   );
 }
 
 
-function constantTimeEqual(a, b) {
-  if (a.length !== b.length) {
+function constantTimeEqual(
+  a,
+  b
+) {
+  if (
+    a.length !==
+    b.length
+  ) {
     return false;
   }
 
   let difference = 0;
 
-  for (let i = 0; i < a.length; i++) {
-    difference |= a[i] ^ b[i];
+  for (
+    let i = 0;
+    i < a.length;
+    i++
+  ) {
+    difference |=
+      a[i] ^ b[i];
   }
 
   return difference === 0;
 }
 
 
-function bytesToBase64Url(bytes) {
+function bytesToBase64Url(
+  bytes
+) {
   let binary = "";
 
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
+  for (
+    const byte of bytes
+  ) {
+    binary +=
+      String.fromCharCode(
+        byte
+      );
   }
 
-  return btoa(binary)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
+  return btoa(
+    binary
+  )
+    .replace(
+      /\+/g,
+      "-"
+    )
+    .replace(
+      /\//g,
+      "_"
+    )
+    .replace(
+      /=+$/,
+      ""
+    );
 }
 
 
-function base64UrlToBytes(value) {
+function base64UrlToBytes(
+  value
+) {
   const base64 =
     value
-      .replace(/-/g, "+")
-      .replace(/_/g, "/");
+      .replace(
+        /-/g,
+        "+"
+      )
+      .replace(
+        /_/g,
+        "/"
+      );
 
   const padded =
     base64 +
     "=".repeat(
-      (4 - (base64.length % 4)) % 4
+      (4 -
+        (base64.length % 4)) %
+        4
     );
 
   const binary =
-    atob(padded);
+    atob(
+      padded
+    );
 
   const bytes =
-    new Uint8Array(binary.length);
+    new Uint8Array(
+      binary.length
+    );
 
   for (
     let i = 0;
@@ -1759,7 +2755,9 @@ function base64UrlToBytes(value) {
     i++
   ) {
     bytes[i] =
-      binary.charCodeAt(i);
+      binary.charCodeAt(
+        i
+      );
   }
 
   return bytes;
@@ -1770,12 +2768,18 @@ function base64UrlToBytes(value) {
 // INPUT
 // ============================================================
 
-function normalizePhone(value) {
+function normalizePhone(
+  value
+) {
   let phone =
-    String(value || "").trim();
+    String(
+      value || ""
+    ).trim();
 
   phone =
-    normalizeDigits(phone);
+    normalizeDigits(
+      phone
+    );
 
   phone =
     phone.replace(
@@ -1783,58 +2787,90 @@ function normalizePhone(value) {
       ""
     );
 
-  if (phone.startsWith("+98")) {
+  if (
+    phone.startsWith(
+      "+98"
+    )
+  ) {
     phone =
-      "0" + phone.slice(3);
+      "0" +
+      phone.slice(3);
   }
 
-  if (phone.startsWith("0098")) {
+  if (
+    phone.startsWith(
+      "0098"
+    )
+  ) {
     phone =
-      "0" + phone.slice(4);
+      "0" +
+      phone.slice(4);
   }
 
   return phone;
 }
 
 
-function normalizeDigits(value) {
+function normalizeDigits(
+  value
+) {
   const persian =
     "۰۱۲۳۴۵۶۷۸۹";
 
   const arabic =
     "٠١٢٣٤٥٦٧٨٩";
 
-  return String(value || "")
+  return String(
+    value || ""
+  )
     .replace(
       /[۰-۹]/g,
       char =>
         String(
-          persian.indexOf(char)
+          persian.indexOf(
+            char
+          )
         )
     )
     .replace(
       /[٠-٩]/g,
       char =>
         String(
-          arabic.indexOf(char)
+          arabic.indexOf(
+            char
+          )
         )
     );
 }
 
 
-function isValidPhone(phone) {
-  return /^09\d{9}$/.test(phone);
+function isValidPhone(
+  phone
+) {
+  return /^09\d{9}$/.test(
+    phone
+  );
 }
 
 
-function cleanText(value, maxLength) {
-  return String(value || "")
+function cleanText(
+  value,
+  maxLength
+) {
+  return String(
+    value || ""
+  )
     .trim()
-    .slice(0, maxLength);
+    .slice(
+      0,
+      maxLength
+    );
 }
 
 
-async function readJson(request) {
+async function readJson(
+  request
+) {
   try {
     return await request.json();
   } catch {
@@ -1847,9 +2883,13 @@ async function readJson(request) {
 // COOKIE
 // ============================================================
 
-function getSessionToken(request) {
+function getSessionToken(
+  request
+) {
   const cookieHeader =
-    request.headers.get("Cookie");
+    request.headers.get(
+      "Cookie"
+    );
 
   if (!cookieHeader) {
     return null;
@@ -1858,7 +2898,8 @@ function getSessionToken(request) {
   const cookies = {};
 
   for (
-    const part of cookieHeader.split(";")
+    const part of
+      cookieHeader.split(";")
   ) {
     const index =
       part.indexOf("=");
@@ -1868,15 +2909,28 @@ function getSessionToken(request) {
     }
 
     const name =
-      part.slice(0, index).trim();
+      part
+        .slice(
+          0,
+          index
+        )
+        .trim();
 
     const value =
-      part.slice(index + 1).trim();
+      part
+        .slice(
+          index + 1
+        )
+        .trim();
 
-    cookies[name] = value;
+    cookies[name] =
+      value;
   }
 
-  return cookies.session || null;
+  return (
+    cookies.session ||
+    null
+  );
 }
 
 
@@ -1913,15 +2967,23 @@ function clearSessionCookie() {
 // STATUS
 // ============================================================
 
-function statusLabel(status) {
+function statusLabel(
+  status
+) {
   const labels = {
     new: "جدید",
-    under_review: "در حال بررسی",
-    answered: "پاسخ داده شده",
-    closed: "بسته شده"
+    under_review:
+      "در حال بررسی",
+    answered:
+      "پاسخ داده شده",
+    closed:
+      "بسته شده"
   };
 
-  return labels[status] || status;
+  return (
+    labels[status] ||
+    status
+  );
 }
 
 
@@ -1948,8 +3010,12 @@ function json(
   );
 
   for (
-    const [key, value]
-    of Object.entries(extraHeaders)
+    const [
+      key,
+      value
+    ] of Object.entries(
+      extraHeaders
+    )
   ) {
     headers.set(
       key,
@@ -1958,7 +3024,9 @@ function json(
   }
 
   return new Response(
-    JSON.stringify(data),
+    JSON.stringify(
+      data
+    ),
     {
       status,
       headers
